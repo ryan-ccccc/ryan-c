@@ -15,3 +15,5 @@ I am interested in new technology and ideas that can make everyday life better. 
 ## My Goals
 
 I want to keep learning new skills, improve at designing and creating things, and become better at turning ideas into real projects.
+
+[View my Arduino Project](ArduinoProject.md)
