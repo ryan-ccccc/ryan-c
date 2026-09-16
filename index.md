@@ -17,3 +17,4 @@ I am interested in new technology and ideas that can make everyday life better. 
 I want to keep learning new skills, improve at designing and creating things, and become better at turning ideas into real projects.
 
 [View my Arduino Project](ArduinoProject.md)
+[View my Snake Game controlled by a joystick](snake.html)
