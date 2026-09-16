@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Arduino Joystick Test</title>
+</head>
+
+<body>
+
+  <h1>Arduino Joystick Test</h1>
+
+  <button id="connectButton">Connect Arduino</button>
+
+  <h2>Direction:</h2>
+  <p id="direction">Not connected</p>
+
+  <script>
+    let port;
+    let reader;
+    let buffer = "";
+
+    const connectButton = document.getElementById("connectButton");
+    const directionText = document.getElementById("direction");
+
+    connectButton.addEventListener("click", async () => {
+
+      // Check if browser supports Web Serial
+      if (!("serial" in navigator)) {
+        directionText.textContent =
+          "Web Serial is not supported in this browser.";
+        return;
+      }
+
+      try {
+
+        // Ask user to choose Arduino
+        port = await navigator.serial.requestPort();
+
+        // Must match Serial.begin(9600)
+        await port.open({
+          baudRate: 9600
+        });
+
+        directionText.textContent = "Connected!";
+
+        readArduino();
+
+      } catch (error) {
+        console.log(error);
+        directionText.textContent = "Connection failed.";
+      }
+    });
+
+
+    async function readArduino() {
+
+      const decoder = new TextDecoder();
+
+      while (port.readable) {
+
+        reader = port.readable.getReader();
+
+        try {
+
+          while (true) {
+
+            const { value, done } = await reader.read();
+
+            if (done) {
+              break;
+            }
+
+            // Convert Arduino data into text
+            buffer += decoder.decode(value, { stream: true });
+
+            // Arduino println() ends messages with a new line
+            const lines = buffer.split("\n");
+
+            // Save unfinished line
+            buffer = lines.pop();
+
+            for (let line of lines) {
+
+              line = line.trim();
+
+              if (line === "L") {
+                directionText.textContent = "LEFT";
+              }
+
+              else if (line === "R") {
+                directionText.textContent = "RIGHT";
+              }
+
+              else if (line === "U") {
+                directionText.textContent = "UP";
+              }
+
+              else if (line === "D") {
+                directionText.textContent = "DOWN";
+              }
+            }
+          }
+
+        } catch (error) {
+          console.log(error);
+        }
+
+        finally {
+          reader.releaseLock();
+        }
+      }
+    }
+
+  </script>
+
+</body>
+</html>
