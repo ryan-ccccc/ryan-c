@@ -1,31 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Arduino Joystick Test</title>
+  <title>Arduino Joystick Snake</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+    }
+
+    canvas {
+      background-color: black;
+      border: 4px solid #333;
+      max-width: 90%;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #status {
+      font-weight: bold;
+    }
+  </style>
 </head>
 
 <body>
 
-  <h1>Arduino Joystick Test</h1>
+  <h1>Arduino Joystick Snake</h1>
 
   <button id="connectButton">Connect Arduino</button>
+  <button id="startButton">Start / Restart Game</button>
 
-  <h2>Direction:</h2>
-  <p id="direction">Not connected</p>
+  <p id="status">Arduino: Not Connected</p>
+  <p>
+    Direction:
+    <span id="direction">None</span>
+  </p>
+
+  <p>
+    Score:
+    <span id="score">0</span>
+  </p>
+
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+
 
   <script>
+
+    // -----------------------------
+    // ARDUINO / WEB SERIAL
+    // -----------------------------
+
     let port;
     let reader;
     let buffer = "";
 
-    const connectButton = document.getElementById("connectButton");
-    const directionText = document.getElementById("direction");
+    const connectButton =
+      document.getElementById("connectButton");
+
+    const statusText =
+      document.getElementById("status");
+
+    const directionText =
+      document.getElementById("direction");
+
 
     connectButton.addEventListener("click", async () => {
 
-      // Check if browser supports Web Serial
       if (!("serial" in navigator)) {
-        directionText.textContent =
+        statusText.textContent =
           "Web Serial is not supported in this browser.";
         return;
       }
@@ -35,19 +83,29 @@
         // Ask user to choose Arduino
         port = await navigator.serial.requestPort();
 
-        // Must match Serial.begin(9600)
+        // Same baud rate as Arduino
         await port.open({
           baudRate: 9600
         });
 
-        directionText.textContent = "Connected!";
+        statusText.textContent =
+          "Arduino: Connected";
 
+        connectButton.disabled = true;
+
+        // Start listening to Arduino
         readArduino();
 
-      } catch (error) {
-        console.log(error);
-        directionText.textContent = "Connection failed.";
       }
+
+      catch (error) {
+
+        console.log(error);
+
+        statusText.textContent =
+          "Connection failed. Make sure Serial Monitor is closed.";
+      }
+
     });
 
 
@@ -63,52 +121,515 @@
 
           while (true) {
 
-            const { value, done } = await reader.read();
+            const { value, done } =
+              await reader.read();
 
             if (done) {
               break;
             }
 
-            // Convert Arduino data into text
-            buffer += decoder.decode(value, { stream: true });
+            // Turn Arduino data into text
+            buffer += decoder.decode(
+              value,
+              { stream: true }
+            );
 
-            // Arduino println() ends messages with a new line
+            // Arduino println() sends a new line
             const lines = buffer.split("\n");
 
             // Save unfinished line
             buffer = lines.pop();
 
+
             for (let line of lines) {
 
               line = line.trim();
 
-              if (line === "L") {
-                directionText.textContent = "LEFT";
-              }
+              handleArduinoDirection(line);
 
-              else if (line === "R") {
-                directionText.textContent = "RIGHT";
-              }
-
-              else if (line === "U") {
-                directionText.textContent = "UP";
-              }
-
-              else if (line === "D") {
-                directionText.textContent = "DOWN";
-              }
             }
           }
 
-        } catch (error) {
+        }
+
+        catch (error) {
+
           console.log(error);
+
+          statusText.textContent =
+            "Arduino connection error.";
+
         }
 
         finally {
+
           reader.releaseLock();
+
         }
       }
     }
+
+
+    // -----------------------------
+    // JOYSTICK DIRECTIONS
+    // -----------------------------
+
+    function handleArduinoDirection(command) {
+
+      if (command === "L") {
+
+        directionText.textContent = "LEFT";
+
+        changeDirection("left");
+
+      }
+
+      else if (command === "R") {
+
+        directionText.textContent = "RIGHT";
+
+        changeDirection("right");
+
+      }
+
+      else if (command === "U") {
+
+        directionText.textContent = "UP";
+
+        changeDirection("up");
+
+      }
+
+      else if (command === "D") {
+
+        directionText.textContent = "DOWN";
+
+        changeDirection("down");
+
+      }
+    }
+
+
+    // -----------------------------
+    // SNAKE GAME
+    // -----------------------------
+
+    const canvas =
+      document.getElementById("gameCanvas");
+
+    const ctx =
+      canvas.getContext("2d");
+
+    const startButton =
+      document.getElementById("startButton");
+
+    const scoreText =
+      document.getElementById("score");
+
+
+    const tileSize = 20;
+
+    const tileCount =
+      canvas.width / tileSize;
+
+
+    let snake;
+
+    let food;
+
+    let direction;
+
+    let nextDirection;
+
+    let score;
+
+    let gameLoop;
+
+    let gameRunning = false;
+
+
+    // -----------------------------
+    // START GAME
+    // -----------------------------
+
+    function startGame() {
+
+      // Starting snake
+      snake = [
+        { x: 10, y: 10 },
+        { x: 9, y: 10 },
+        { x: 8, y: 10 }
+      ];
+
+      // Snake starts moving right
+      direction = "right";
+      nextDirection = "right";
+
+      score = 0;
+
+      scoreText.textContent = score;
+
+      gameRunning = true;
+
+      createFood();
+
+      // Stop old game loop if one exists
+      clearInterval(gameLoop);
+
+      // Move snake every 130 milliseconds
+      gameLoop = setInterval(
+        updateGame,
+        130
+      );
+
+      drawGame();
+    }
+
+
+    startButton.addEventListener(
+      "click",
+      startGame
+    );
+
+
+    // -----------------------------
+    // CHANGE SNAKE DIRECTION
+    // -----------------------------
+
+    function changeDirection(newDirection) {
+
+      // Stop snake from turning directly
+      // backwards into itself
+
+      if (
+        newDirection === "left" &&
+        direction === "right"
+      ) {
+        return;
+      }
+
+      if (
+        newDirection === "right" &&
+        direction === "left"
+      ) {
+        return;
+      }
+
+      if (
+        newDirection === "up" &&
+        direction === "down"
+      ) {
+        return;
+      }
+
+      if (
+        newDirection === "down" &&
+        direction === "up"
+      ) {
+        return;
+      }
+
+      nextDirection = newDirection;
+    }
+
+
+    // -----------------------------
+    // UPDATE GAME
+    // -----------------------------
+
+    function updateGame() {
+
+      if (!gameRunning) {
+        return;
+      }
+
+      direction = nextDirection;
+
+      // Copy the snake's head
+      const head = {
+        x: snake[0].x,
+        y: snake[0].y
+      };
+
+
+      // Move head
+      if (direction === "left") {
+        head.x--;
+      }
+
+      else if (direction === "right") {
+        head.x++;
+      }
+
+      else if (direction === "up") {
+        head.y--;
+      }
+
+      else if (direction === "down") {
+        head.y++;
+      }
+
+
+      // Check wall collision
+      if (
+        head.x < 0 ||
+        head.x >= tileCount ||
+        head.y < 0 ||
+        head.y >= tileCount
+      ) {
+
+        gameOver();
+        return;
+
+      }
+
+
+      // Check if food was eaten
+      const ateFood =
+        head.x === food.x &&
+        head.y === food.y;
+
+
+      // Temporary snake for collision checking
+      const bodyToCheck = snake.slice();
+
+      // Tail will move away if food was not eaten
+      if (!ateFood) {
+        bodyToCheck.pop();
+      }
+
+
+      // Check if snake hit itself
+      for (let segment of bodyToCheck) {
+
+        if (
+          head.x === segment.x &&
+          head.y === segment.y
+        ) {
+
+          gameOver();
+          return;
+
+        }
+      }
+
+
+      // Add new head
+      snake.unshift(head);
+
+
+      if (ateFood) {
+
+        score++;
+
+        scoreText.textContent = score;
+
+        createFood();
+
+      }
+
+      else {
+
+        // Remove tail
+        snake.pop();
+
+      }
+
+
+      drawGame();
+    }
+
+
+    // -----------------------------
+    // CREATE FOOD
+    // -----------------------------
+
+    function createFood() {
+
+      let validPosition = false;
+
+      while (!validPosition) {
+
+        food = {
+
+          x: Math.floor(
+            Math.random() * tileCount
+          ),
+
+          y: Math.floor(
+            Math.random() * tileCount
+          )
+
+        };
+
+
+        validPosition = true;
+
+
+        // Make sure food is not inside snake
+        for (let segment of snake) {
+
+          if (
+            segment.x === food.x &&
+            segment.y === food.y
+          ) {
+
+            validPosition = false;
+            break;
+
+          }
+        }
+      }
+    }
+
+
+    // -----------------------------
+    // DRAW GAME
+    // -----------------------------
+
+    function drawGame() {
+
+      // Clear board
+      ctx.fillStyle = "black";
+
+      ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+
+      // Draw snake
+      ctx.fillStyle = "lime";
+
+      for (let segment of snake) {
+
+        ctx.fillRect(
+
+          segment.x * tileSize,
+
+          segment.y * tileSize,
+
+          tileSize - 2,
+
+          tileSize - 2
+
+        );
+      }
+
+
+      // Draw food
+      ctx.fillStyle = "red";
+
+      ctx.fillRect(
+
+        food.x * tileSize,
+
+        food.y * tileSize,
+
+        tileSize - 2,
+
+        tileSize - 2
+
+      );
+    }
+
+
+    // -----------------------------
+    // GAME OVER
+    // -----------------------------
+
+    function gameOver() {
+
+      gameRunning = false;
+
+      clearInterval(gameLoop);
+
+
+      ctx.fillStyle =
+        "rgba(0, 0, 0, 0.65)";
+
+      ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+
+      ctx.fillStyle = "white";
+
+      ctx.font = "40px Arial";
+
+      ctx.textAlign = "center";
+
+      ctx.fillText(
+        "Game Over",
+        canvas.width / 2,
+        canvas.height / 2
+      );
+
+
+      ctx.font = "20px Arial";
+
+      ctx.fillText(
+        "Score: " + score,
+        canvas.width / 2,
+        canvas.height / 2 + 40
+      );
+    }
+
+
+    // -----------------------------
+    // KEYBOARD BACKUP
+    // -----------------------------
+
+    document.addEventListener(
+      "keydown",
+      function(event) {
+
+        if (event.key === "ArrowLeft") {
+          changeDirection("left");
+        }
+
+        else if (event.key === "ArrowRight") {
+          changeDirection("right");
+        }
+
+        else if (event.key === "ArrowUp") {
+          changeDirection("up");
+        }
+
+        else if (event.key === "ArrowDown") {
+          changeDirection("down");
+        }
+
+      }
+    );
+
+
+    // Draw blank starting screen
+    ctx.fillStyle = "black";
+
+    ctx.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    ctx.fillStyle = "white";
+
+    ctx.font = "22px Arial";
+
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+      "Press Start Game",
+      canvas.width / 2,
+      canvas.height / 2
+    );
 
   </script>
 
