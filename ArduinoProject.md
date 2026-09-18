@@ -120,6 +120,8 @@ U = Up
 D = Down
 ```
 
+<img width="514" height="544" alt="Screenshot 2026-09-18 at 10 56 41 AM" src="https://github.com/user-attachments/assets/e409c03d-069f-4857-a38d-d4b3301af52f" />
+
 My Arduino code checks the X and Y values and sends the correct letter.
 
 For example:
@@ -245,41 +247,4 @@ My process became:
 After I closed the Serial Monitor, the webpage connected and started reading the joystick directions correctly.
 
 This problem helped me understand that the Arduino's serial connection is being used by either the Serial Monitor or my webpage. I need to close one before I use the other.
-
-## Current Result
-
-At this point, I have successfully connected a physical joystick to an Arduino and used it to send information to a webpage on GitHub.
-
-I have completed:
-
-* Wiring the joystick to the Arduino
-* Reading the X and Y analog inputs
-* Converting the analog values into directions
-* Fixing the reversed left and right directions
-* Creating a center range for the joystick
-* Testing the joystick with the Serial Monitor
-* Sending L, R, U, and D through Serial
-* Creating a webpage in my GitHub repository
-* Using JavaScript and Web Serial to connect to the Arduino
-* Fixing the Serial Monitor connection problem
-* Reading Arduino data on the webpage
-* Making the webpage display the direction I move the joystick
-
-The current system works like this:
-
-```text
-Joystick
-   ↓
-Arduino
-   ↓
-USB Serial
-   ↓
-Web Serial API
-   ↓
-JavaScript
-   ↓
-GitHub webpage
-   ↓
-LEFT / RIGHT / UP / DOWN
-```
 
