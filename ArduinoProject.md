@@ -74,10 +74,10 @@ LEFT
 My original code was:
 
 ```cpp
-if (xValue < 300) {
+if (xValue < 400) {
   Serial.println("LEFT");
 }
-else if (xValue > 700) {
+else if (xValue > 600) {
   Serial.println("RIGHT");
 }
 ```
@@ -87,10 +87,10 @@ After testing the joystick, I realized that its X-axis was oriented differently 
 I fixed it by switching the directions:
 
 ```cpp
-if (xValue < 300) {
+if (xValue < 400) {
   Serial.println("RIGHT");
 }
-else if (xValue > 700) {
+else if (xValue > 600) {
   Serial.println("LEFT");
 }
 ```
@@ -105,7 +105,7 @@ When I tested it, I noticed that the value changed slightly even when I was not 
 
 Instead of using one exact value, I created a center range.
 
-Values between about **300 and 700** count as the center. This stops small changes in the analog reading from being counted as movement.
+Values between about **400 and 600** count as the center. This stops small changes in the analog reading from being counted as movement.
 
 ## Stage 2: Sending Directions for the Website
 
@@ -127,16 +127,16 @@ My Arduino code checks the X and Y values and sends the correct letter.
 For example:
 
 ```cpp
-if (xValue < 300) {
+if (xValue < 400) {
   Serial.println("R");
 }
-else if (xValue > 700) {
+else if (xValue > 600) {
   Serial.println("L");
 }
-else if (yValue < 300) {
+else if (yValue < 400) {
   Serial.println("D");
 }
-else if (yValue > 700) {
+else if (yValue > 600) {
   Serial.println("U");
 }
 ```
