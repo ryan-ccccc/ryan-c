@@ -78,7 +78,9 @@ CENTER
 
 This helped me make sure the Arduino was correctly reading the joystick before I tried connecting it to a webpage.
 
-<img width="1280" height="1707" alt="f1c29299bacbc1c1220f0f30186f55bc" src="https://github.com/user-attachments/assets/0d72f3d2-bd25-47a8-9a68-dfcf86f4f2ea" />
+<img src="https://github.com/user-attachments/assets/0d72f3d2-bd25-47a8-9a68-dfcf86f4f2ea"
+     alt="Joystick project photo"
+     style="width: 600px; max-width: 100%; height: auto;">
 
 ## Mistake 1: Left and Right Were Backwards
 
