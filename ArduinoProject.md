@@ -941,11 +941,6 @@ void loop() {
 The final Snake game uses the Arduino joystick as the controller through Web Serial.
 
 [Open the Arduino Joystick Snake Game](snake.html)
-## Final Snake Game
-
-The final Snake game uses the Arduino joystick as the controller through Web Serial.
-
-[Open the final Arduino Joystick Snake Game](snake.html)
 
 
 
