@@ -828,7 +828,12 @@ Once the Web Serial code and Snake code were combined, the physical joystick con
 
 <!-- VIDEO: Put the video of you controlling Snake with the joystick here. -->
 
-**Video 2.** Final test of the project. The physical joystick sends direction commands through the Arduino and Web Serial, and those commands control the Snake game.
+<video width="700" controls style="max-width: 100%;">
+  <source src="videos/joystick-snake-final.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+<p><strong>Video 2.</strong> Using the physical joystick to control the Snake game.</p>
 
 The completed system is:
 
