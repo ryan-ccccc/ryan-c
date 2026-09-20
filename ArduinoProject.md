@@ -63,11 +63,7 @@ SW  → Digital Pin 2
 
 The joystick uses both analog and digital input. VRx and VRy are analog because the joystick can be in many positions. SW is digital because the button is either pressed or not pressed.
 
-<img
-  src="https://github.com/user-attachments/assets/b24d8535-2219-4912-88fb-3420d3a53496"
-  alt="Arduino joystick wiring"
-  style="width: 600px; max-width: 100%; height: auto; object-fit: contain;"
->
+<img width="450px" height="auto" alt="f1c29299bacbc1c1220f0f30186f55bc" src="https://github.com/user-attachments/assets/8fb742e6-7460-4304-9f83-f819f84f6f58" />
 
 **Figure 1.** My joystick connected to the Arduino. VRx and VRy connect to the analog input pins so the Arduino can read the joystick's position.
 
@@ -203,7 +199,10 @@ This was useful because it separated the project into smaller tests. If the lett
 
 <!-- VIDEO: Put the video of you moving the joystick and the Arduino producing L/R/U/D/C here. -->
 
-**Video 1.** Testing the joystick before connecting it to the website. Moving the joystick makes the Arduino send a one-letter direction through Serial.
+<video width="700" controls style="max-width: 100%;">
+  <source src="videos/joystick-serial-test.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 ---
 
@@ -334,7 +333,7 @@ on the Arduino.
 
 <!-- PHOTO: Put the photo showing the browser asking you to choose cu.usbmodem101 here. -->
 
-**Figure 2.** The Web Serial device window. I select the Arduino's USB serial port before the webpage can read its data.
+<img width="1706" height="1279" alt="7fe20a6f929e09e06bd69410d32fe0b1" src="https://github.com/user-attachments/assets/1ab20620-73f6-4bdb-900f-155965ccf166" />
 
 ---
 
