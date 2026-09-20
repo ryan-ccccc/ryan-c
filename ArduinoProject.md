@@ -23,135 +23,79 @@ body {
 }
 </style>
 
-# Arduino Joystick Controller
+# Arduino Joystick Snake Controller
 
-## Project Idea
+## Project Overview
 
-For this project, I chose to build on **analog input**. In class, we used a potentiometer to see how Arduino can read changing values. I wanted to use analog input in a more interactive way, so I chose a joystick.
+For this project, I chose to build on **analog input**. In class, we used a potentiometer to see how an Arduino can read a range of values instead of only HIGH or LOW. I wanted to use analog input for something more interactive, so I chose a joystick.
 
-My current goal is to use the joystick to control something on a webpage. Before building the final game, I first needed to make sure the Arduino could correctly read the joystick and send its directions to the website.
+My final goal was to use a physical joystick connected to an Arduino to control a Snake game on my GitHub website.
 
-The system currently works like this:
+The project developed in stages. I first got the Arduino to read the joystick and recognize left, right, up, down, and center. Then I changed those directions into simple letters that could be sent through Serial. After that, I made a test webpage that connected to the Arduino with Web Serial and displayed the direction it received. Once that worked, I found a basic Snake game online and connected my joystick input system to the game's movement controls.
 
-**Joystick movement → Arduino reads the values → Arduino finds the direction → Arduino sends the direction through USB → webpage reads and displays the direction**
+The final system works like this:
 
-## New Component: Joystick
+**Joystick → Arduino → Serial through USB → Web Serial API → JavaScript → Snake movement**
 
-The new component I chose is a joystick module.
+---
 
-The joystick has five pins:
+## Choosing and Wiring the Joystick
 
-* **VCC** → power
-* **GND** → ground
-* **VRx** → left and right movement
-* **VRy** → up and down movement
-* **SW** → button when the joystick is pressed down
+The new component I chose was a joystick module.
 
-I connected VRx to **A0** and VRy to **A1** on the Arduino.
+It has five pins:
 
-The joystick uses analog input because its position is not just on or off. The Arduino reads a range of values depending on how far and which direction I move it.
+- **VCC** → power
+- **GND** → ground
+- **VRx** → horizontal movement
+- **VRy** → vertical movement
+- **SW** → button when the joystick is pressed down
 
-## Stage 1: Reading the Joystick
+I connected:
 
-I first tested the joystick using the Arduino Serial Monitor.
+```text
+VCC → 5V
+GND → GND
+VRx → A0
+VRy → A1
+SW  → Digital Pin 2
+```
 
-I used:
+The joystick uses both analog and digital input. VRx and VRy are analog because the joystick can be in many positions. SW is digital because the button is either pressed or not pressed.
+
+<img
+  src="https://github.com/user-attachments/assets/b24d8535-2219-4912-88fb-3420d3a53496"
+  alt="Arduino joystick wiring"
+  style="width: 600px; max-width: 100%; height: auto; object-fit: contain;"
+>
+
+**Figure 1.** My joystick connected to the Arduino. VRx and VRy connect to the analog input pins so the Arduino can read the joystick's position.
+
+---
+
+## Reading the Joystick
+
+I started by reading the X and Y axes:
 
 ```cpp
-int xValue = analogRead(A0);
-int yValue = analogRead(A1);
+int xValue = analogRead(xPin);
+int yValue = analogRead(yPin);
 ```
 
-`analogRead()` gives a value from about **0 to 1023**. When the joystick is near the center, the value is usually around **512**.
-
-I used values below 300 and above 700 to decide when the joystick was moved far enough in a direction.
-
-The Serial Monitor could display:
-
-```text
-LEFT
-RIGHT
-UP
-DOWN
-CENTER
-```
-
-This helped me make sure the Arduino was correctly reading the joystick before I tried connecting it to a webpage.
-
-<img src="https://github.com/user-attachments/assets/0d72f3d2-bd25-47a8-9a68-dfcf86f4f2ea"
-     alt="Joystick project photo"
-     style="width: 600px; max-width: 100%; height: auto;">
-
-## Mistake 1: Left and Right Were Backwards
-
-One of the first problems I found was that left and right were reversed.
-
-When I moved the joystick left, the Serial Monitor printed:
-
-```text
-RIGHT
-```
-
-When I moved it right, it printed:
-
-```text
-LEFT
-```
-
-My original code was:
+Earlier in the code, I defined:
 
 ```cpp
-if (xValue < 400) {
-  Serial.println("LEFT");
-}
-else if (xValue > 600) {
-  Serial.println("RIGHT");
-}
+const int xPin = A0;
+const int yPin = A1;
 ```
 
-After testing the joystick, I realized that its X-axis was oriented differently from what I expected.
+This means `xValue` stores the horizontal position and `yValue` stores the vertical position.
 
-I fixed it by switching the directions:
+`analogRead()` gives a value from about **0 to 1023**. The middle is around 512, so when the joystick is resting near the center, both values are usually somewhere around that number.
 
-```cpp
-if (xValue < 400) {
-  Serial.println("RIGHT");
-}
-else if (xValue > 600) {
-  Serial.println("LEFT");
-}
-```
+The Arduino does not automatically know that a number means "left" or "up." My code has to interpret the numbers and turn them into directions.
 
-After changing the code, the direction shown on the Serial Monitor matched the direction I actually moved the joystick.
-
-## Mistake 2: The Center Was Not Exactly 512
-
-At first, I thought I could use exactly **512** as the center of the joystick.
-
-When I tested it, I noticed that the value changed slightly even when I was not touching the joystick. It might be close to 512, but it does not always stay exactly there.
-
-Instead of using one exact value, I created a center range.
-
-Values between about **400 and 600** count as the center. This stops small changes in the analog reading from being counted as movement.
-
-## Stage 2: Sending Directions for the Website
-
-After the joystick worked in the Serial Monitor, I changed the output so it would be easier for a webpage to read.
-
-Instead of sending full words, the Arduino sends one letter for each direction:
-
-```text
-L = Left
-R = Right
-U = Up
-D = Down
-```
-
-<img width="514" height="544" alt="Screenshot 2026-09-18 at 10 56 41 AM" src="https://github.com/user-attachments/assets/e409c03d-069f-4857-a38d-d4b3301af52f" />
-
-My Arduino code checks the X and Y values and sends the correct letter.
-
-For example:
+My final direction code is:
 
 ```cpp
 if (xValue < 400) {
@@ -166,25 +110,213 @@ else if (yValue < 400) {
 else if (yValue > 600) {
   Serial.println("U");
 }
+else {
+  Serial.println("C");
+}
 ```
 
-I do not need to send a CENTER value because the webpage only needs to know when I move the joystick in a direction.
+The letters mean:
 
-## Stage 3: Connecting the Arduino to GitHub
+```text
+R = Right
+L = Left
+D = Down
+U = Up
+C = Center
+```
 
-After the Arduino could send the directions correctly, I wanted to get that information onto my GitHub website.
+I used single letters because they are simple for the webpage to read later.
 
-I created a separate HTML page in my GitHub repository. The page uses JavaScript and the **Web Serial API** to communicate with the Arduino through the USB cable.
+---
 
-I first added a **Connect Arduino** button to the webpage. The website cannot automatically connect to any USB device, so I have to click the button and choose the Arduino from the list of available serial ports.
+## Debugging the Joystick Directions
 
-The Arduino code starts Serial communication with:
+One of my first problems was that left and right were backwards.
+
+My original idea was:
+
+```cpp
+if (xValue < 400) {
+  Serial.println("L");
+}
+else if (xValue > 600) {
+  Serial.println("R");
+}
+```
+
+When I actually tested the joystick, moving it left produced the value I had assigned to RIGHT, and moving it right produced LEFT.
+
+At first, I thought I had wired VRx incorrectly. After checking the readings, I realized the wiring was working. The X-axis on the joystick was simply oriented differently from what I expected.
+
+I fixed it by switching what the values meant:
+
+```cpp
+if (xValue < 400) {
+  Serial.println("R");
+}
+else if (xValue > 600) {
+  Serial.println("L");
+}
+```
+
+This helped me understand that the Arduino only sees numbers. My code decides what those numbers mean physically.
+
+---
+
+## Creating a Center Range
+
+Another problem was that the joystick did not return exactly 512 every time I let go of it.
+
+At first, I thought I could treat one exact value as the center. When I watched the readings, I saw that they moved slightly even when the joystick looked centered.
+
+Instead of checking for one exact number, I created a **dead zone**:
+
+```text
+0–399      = direction
+400–600    = center
+601–1023   = opposite direction
+```
+
+This is why the program checks whether the value is below 400 or above 600.
+
+Small changes inside the center range are ignored. This became important for Snake because I did not want tiny movements around the center to accidentally change the snake's direction.
+
+The code checks X before Y using `else if`. This also means that if I push the joystick diagonally, the X direction gets priority. That is fine for Snake because the game only uses four directions and does not need diagonal movement.
+
+---
+
+## Testing the Output in Serial Monitor
+
+Before trying to connect the Arduino to a website, I tested the directions in the Arduino Serial Monitor.
+
+When I moved the joystick, the Arduino printed only:
+
+```text
+L
+R
+U
+D
+C
+```
+
+This was useful because it separated the project into smaller tests. If the letters were wrong in Serial Monitor, I knew I needed to fix the Arduino code before working on the webpage.
+
+<!-- VIDEO: Put the video of you moving the joystick and the Arduino producing L/R/U/D/C here. -->
+
+**Video 1.** Testing the joystick before connecting it to the website. Moving the joystick makes the Arduino send a one-letter direction through Serial.
+
+---
+
+## Testing the Joystick Button
+
+The joystick also has a built-in button when I press directly down on it.
+
+I connected SW to digital pin 2 and used:
+
+```cpp
+pinMode(swPin, INPUT_PULLUP);
+```
+
+With `INPUT_PULLUP`, the button works like this:
+
+```text
+HIGH = not pressed
+LOW  = pressed
+```
+
+This seemed backwards at first, but the internal pull-up resistor keeps the pin HIGH until the button connects it to ground.
+
+I also reused the debounce code from earlier in the unit. A physical button can briefly switch between HIGH and LOW several times during one press. The debounce code waits until the signal has stayed stable for 50 milliseconds before accepting the change.
+
+```cpp
+if ((millis() - lastDebounceTime) > debounceDelay) {
+```
+
+When a real press is detected, I toggle the state:
+
+```cpp
+toggleState = !toggleState;
+```
+
+The `!` means the opposite, so:
+
+```text
+0 → 1
+1 → 0
+```
+
+The joystick button was not needed for controlling Snake, but testing it let me apply the digital-input and debounce work from earlier in the unit to the new component.
+
+---
+
+## Sending the Directions Through Serial
+
+The Arduino and website needed a simple way to communicate.
+
+The Arduino starts Serial communication with:
 
 ```cpp
 Serial.begin(9600);
 ```
 
-Because the Arduino uses a baud rate of 9600, I also had to set the website connection to the same baud rate:
+The number `9600` is the baud rate, or the communication speed.
+
+Instead of sending a long message, the Arduino sends one command:
+
+```cpp
+Serial.println("L");
+```
+
+The Arduino's job is:
+
+```text
+Read joystick
+↓
+Interpret analog values
+↓
+Send a simple direction command
+```
+
+The website does not need to know whether the X value was 250 or 800. It only needs to know the direction the Arduino already decided.
+
+That separation made the project easier to understand and debug.
+
+---
+
+## Connecting the Arduino to My GitHub Website
+
+Before working with Snake, I created a simple webpage whose only job was to connect to the Arduino and display the direction it received.
+
+I used the **Web Serial API** in JavaScript.
+
+The webpage has a button:
+
+```html
+<button id="connectButton">Connect Arduino</button>
+```
+
+JavaScript finds that button with:
+
+```javascript
+const connectButton =
+  document.getElementById("connectButton");
+```
+
+Then an event listener waits for me to click it:
+
+```javascript
+connectButton.addEventListener("click", async () => {
+```
+
+The connection does not happen automatically. I have to click the button and choose the Arduino serial port.
+
+The code that opens the device chooser is:
+
+```javascript
+port = await navigator.serial.requestPort();
+```
+
+After selecting the Arduino, the website opens the connection:
 
 ```javascript
 await port.open({
@@ -192,86 +324,638 @@ await port.open({
 });
 ```
 
-If the two sides used different speeds, the information would not be read correctly.
+The website uses `9600` because it has to match:
 
-After the connection opens, the JavaScript continuously waits for information coming from the Arduino. The Arduino sends letters such as:
-
-```text
-L
-R
-U
-D
+```cpp
+Serial.begin(9600);
 ```
 
-The JavaScript reads the incoming data and checks which letter was sent.
+on the Arduino.
 
-For example:
+<!-- PHOTO: Put the photo showing the browser asking you to choose cu.usbmodem101 here. -->
+
+**Figure 2.** The Web Serial device window. I select the Arduino's USB serial port before the webpage can read its data.
+
+---
+
+## Reading Serial Data in JavaScript
+
+Opening the port only creates the connection. The webpage still needs to continuously read the information coming from the Arduino.
+
+I created:
+
+```javascript
+async function readArduino()
+```
+
+Inside it, I use:
+
+```javascript
+const decoder = new TextDecoder();
+```
+
+The serial connection sends data as bytes. `TextDecoder` converts those bytes into normal text that JavaScript can compare with `"L"`, `"R"`, `"U"`, or `"D"`.
+
+The webpage gets access to the incoming stream with:
+
+```javascript
+reader = port.readable.getReader();
+```
+
+Then this line waits for new information:
+
+```javascript
+const { value, done } = await reader.read();
+```
+
+Because Serial is a continuous stream, data is not guaranteed to arrive as perfectly separated messages. I used a buffer:
+
+```javascript
+buffer += decoder.decode(value, { stream: true });
+```
+
+Then I split the text whenever Arduino's `Serial.println()` created a new line:
+
+```javascript
+const lines = buffer.split("\n");
+```
+
+This line:
+
+```javascript
+buffer = lines.pop();
+```
+
+keeps any unfinished piece of data for the next read.
+
+For each completed line, I remove extra spaces:
+
+```javascript
+line = line.trim();
+```
+
+Then I can compare it with a direction:
 
 ```javascript
 if (line === "L") {
   directionText.textContent = "LEFT";
 }
-else if (line === "R") {
-  directionText.textContent = "RIGHT";
+```
+
+I repeated the same check for R, U, and D.
+
+At this stage, moving the physical joystick changed the direction text on my GitHub webpage. Snake was not involved yet. I wanted to prove that the Arduino-to-browser connection worked on its own first.
+
+The system at that point was:
+
+```text
+Joystick
+↓
+Arduino
+↓
+L / R / U / D
+↓
+USB Serial
+↓
+Web Serial
+↓
+JavaScript
+↓
+Direction displayed on webpage
+```
+
+---
+
+## Problem: Serial Monitor Blocked the Website
+
+One problem happened when I tried to connect the webpage while the Arduino Serial Monitor was still open.
+
+The webpage would not connect correctly.
+
+I realized that Serial Monitor was already using the Arduino's serial port. The webpage was trying to access the same port at the same time.
+
+I fixed it by closing Serial Monitor before pressing **Connect Arduino**.
+
+My testing process became:
+
+```text
+Upload Arduino code
+↓
+Test in Serial Monitor if needed
+↓
+Close Serial Monitor
+↓
+Open GitHub webpage
+↓
+Press Connect Arduino
+↓
+Select Arduino port
+```
+
+After that, the webpage connected normally.
+
+This helped me understand that the serial connection is not only something inside my code. The computer also has to manage which program is using the Arduino's USB connection.
+
+---
+
+## Original Arduino-to-Website Test Code
+
+I kept my original test code because it shows the step between Serial Monitor and the final Snake project.
+
+<details>
+<summary><strong>Show Original Web Serial Test Code</strong></summary>
+
+```html
+<button id="connectButton">Connect Arduino</button>
+
+<h2>Direction:</h2>
+<p id="direction">Not connected</p>
+
+<script>
+let port;
+let reader;
+let buffer = "";
+
+const connectButton = document.getElementById("connectButton");
+const directionText = document.getElementById("direction");
+
+connectButton.addEventListener("click", async () => {
+
+  try {
+
+    port = await navigator.serial.requestPort();
+
+    await port.open({
+      baudRate: 9600
+    });
+
+    directionText.textContent = "Connected!";
+
+    readArduino();
+
+  } catch (error) {
+
+    console.log(error);
+
+    directionText.textContent = "Connection failed.";
+  }
+});
+
+async function readArduino() {
+
+  const decoder = new TextDecoder();
+
+  while (port.readable) {
+
+    reader = port.readable.getReader();
+
+    try {
+
+      while (true) {
+
+        const { value, done } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split("\n");
+
+        buffer = lines.pop();
+
+        for (let line of lines) {
+
+          line = line.trim();
+
+          if (line === "L") {
+            directionText.textContent = "LEFT";
+          }
+
+          else if (line === "R") {
+            directionText.textContent = "RIGHT";
+          }
+
+          else if (line === "U") {
+            directionText.textContent = "UP";
+          }
+
+          else if (line === "D") {
+            directionText.textContent = "DOWN";
+          }
+        }
+      }
+
+    } finally {
+
+      reader.releaseLock();
+
+    }
+  }
+}
+</script>
+```
+
+</details>
+
+---
+
+## Adding the Snake Game
+
+Once the test webpage worked, I moved to the final game.
+
+I found a **basic Snake game online** and used it as the starting point rather than writing the whole game from scratch.
+
+**Original Snake game source:**  
+[ADD THE ACTUAL LINK OR NAME OF THE SNAKE GAME HERE]
+
+The base game already included the main mechanics:
+
+- the game board
+- snake movement
+- food
+- scoring
+- collision detection
+- keyboard controls
+
+My work was understanding how its movement system worked and connecting my Arduino/Web Serial input to it.
+
+<!-- PHOTO: Put the wider photo showing the laptop, Arduino, joystick, and Snake page here. -->
+
+**Figure 3.** The complete setup with the Arduino and joystick connected to the laptop running the Snake webpage.
+
+---
+
+## Understanding the Snake Movement
+
+The Snake game uses an HTML canvas:
+
+```html
+<canvas id="gameCanvas" width="400" height="400"></canvas>
+```
+
+JavaScript gets access to the canvas with:
+
+```javascript
+const canvas =
+  document.getElementById("gameCanvas");
+
+const ctx =
+  canvas.getContext("2d");
+```
+
+The game uses `ctx` to draw the background, snake, food, and game-over screen.
+
+The snake itself is stored as an array:
+
+```javascript
+snake = [
+  { x: 10, y: 10 },
+  { x: 9, y: 10 },
+  { x: 8, y: 10 }
+];
+```
+
+Each object is one section of the snake. `snake[0]` is the head.
+
+The game keeps track of two direction variables:
+
+```javascript
+let direction;
+let nextDirection;
+```
+
+`nextDirection` stores the newest input. During the next game update:
+
+```javascript
+direction = nextDirection;
+```
+
+The snake's head then moves one grid square.
+
+For example:
+
+```javascript
+if (direction === "left") {
+  head.x--;
 }
 ```
 
-This means the Arduino does not directly control the webpage. Instead, the Arduino sends information through the USB cable, and the JavaScript decides what to do with that information.
+Right adds to X, up subtracts from Y, and down adds to Y.
 
-The full connection works like this:
+---
 
-```text
-I move the joystick
-        ↓
-Arduino reads A0 and A1
-        ↓
-Arduino decides the direction
-        ↓
-Arduino sends L, R, U, or D
-        ↓
-USB sends the Serial data to my computer
-        ↓
-Web Serial API reads the data
-        ↓
-JavaScript checks the letter
-        ↓
-GitHub webpage displays the direction
+## Connecting the Joystick to Snake
+
+This was the main change I made to the Snake game.
+
+Before this, my Web Serial code could receive `"L"` and display LEFT:
+
+```javascript
+if (line === "L") {
+  directionText.textContent = "LEFT";
+}
 ```
 
-I tested the connection by opening my GitHub webpage, pressing **Connect Arduino**, and selecting my Arduino. After it connected, moving the physical joystick changed the text on the webpage between:
+I needed the same Serial command to control the game's movement.
 
-```text
-LEFT
-RIGHT
-UP
-DOWN
+I created a function that handles Arduino commands:
+
+```javascript
+function handleArduinoDirection(command) {
+
+  if (command === "L") {
+    directionText.textContent = "LEFT";
+    changeDirection("left");
+  }
+
+  else if (command === "R") {
+    directionText.textContent = "RIGHT";
+    changeDirection("right");
+  }
+
+  else if (command === "U") {
+    directionText.textContent = "UP";
+    changeDirection("up");
+  }
+
+  else if (command === "D") {
+    directionText.textContent = "DOWN";
+    changeDirection("down");
+  }
+}
 ```
 
-This was an important part of the project because I was able to connect hardware that I built on a breadboard to code running on a webpage.
+The important change is:
 
-## Mistake 3: The Website Would Not Connect While Serial Monitor Was Open
-
-I ran into another problem when I tried connecting the Arduino to the webpage.
-
-I still had the Arduino Serial Monitor open because I had been using it to test the joystick. When I pressed the **Connect Arduino** button on my website, the connection did not work correctly.
-
-I realized that the Serial Monitor was already using the Arduino's serial connection. The website was trying to use the same connection at the same time.
-
-To fix it, I closed the Serial Monitor before pressing the Connect Arduino button on the webpage.
-
-My process became:
-
-```text
-1. Upload the Arduino code
-2. Test it in Serial Monitor if needed
-3. Close Serial Monitor
-4. Open my GitHub webpage
-5. Press Connect Arduino
-6. Select the Arduino port
-7. Move the joystick
+```javascript
+changeDirection("left");
 ```
 
-After I closed the Serial Monitor, the webpage connected and started reading the joystick directions correctly.
+Before, `"L"` only changed text on the screen. Now `"L"` is passed into the same direction system used by the Snake game.
 
-This problem helped me understand that the Arduino's serial connection is being used by either the Serial Monitor or my webpage. I need to close one before I use the other.
+The final path for one joystick movement is:
 
+```text
+Move joystick left
+↓
+Arduino reads X value
+↓
+Arduino sends "L"
+↓
+Web Serial reads "L"
+↓
+handleArduinoDirection("L")
+↓
+changeDirection("left")
+↓
+nextDirection becomes "left"
+↓
+Game updates
+↓
+Snake head moves left
+```
+
+That connection between the hardware input and the existing game controls was the main coding change I made to the base Snake game.
+
+---
+
+## Why Center Does Not Stop the Snake
+
+The Arduino sends:
+
+```text
+C
+```
+
+when the joystick returns to its center range.
+
+The Snake code does not have a command for `C`.
+
+I left it this way on purpose.
+
+Snake should continue moving after I release the joystick. Returning the joystick to center should not stop the game.
+
+For example:
+
+```text
+Joystick moved UP
+↓
+Arduino sends U
+↓
+Snake starts moving up
+↓
+Joystick released
+↓
+Arduino sends C
+↓
+C is ignored
+↓
+Snake keeps moving up
+```
+
+The snake only changes direction when the webpage receives L, R, U, or D.
+
+---
+
+## Preventing the Snake From Reversing
+
+The game also checks whether a requested move is allowed.
+
+For example, if the snake is moving right, it cannot instantly turn left:
+
+```javascript
+if (
+  newDirection === "left" &&
+  direction === "right"
+) {
+  return;
+}
+```
+
+`return` stops the direction change.
+
+The same check exists for every opposite direction.
+
+This means the Arduino is responsible for telling the game which direction I moved the joystick, while the Snake code is still responsible for deciding whether that move is legal.
+
+---
+
+## Game Speed
+
+The snake moves repeatedly using:
+
+```javascript
+gameLoop = setInterval(
+  updateGame,
+  130
+);
+```
+
+The `130` is the delay in milliseconds between movements.
+
+A smaller number makes the game faster. A larger number makes it slower.
+
+For example:
+
+```text
+100 = faster
+130 = current speed
+180 = slower
+```
+
+This matters more with a physical controller because I need enough time to move the joystick before the next game update.
+
+---
+
+## Keeping the Keyboard Controls
+
+I kept the original arrow-key controls even after the joystick worked.
+
+They were useful for debugging.
+
+If the keyboard worked but the joystick did not, I knew the Snake game itself was still working. I could then focus on the joystick, Arduino, Serial data, or Web Serial connection.
+
+If both the keyboard and joystick failed, the problem was more likely inside the game code.
+
+Keeping the keyboard input gave me a second way to test the movement system.
+
+---
+
+## Final Test
+
+Once the Web Serial code and Snake code were combined, the physical joystick controlled the game.
+
+<!-- VIDEO: Put the video of you controlling Snake with the joystick here. -->
+
+**Video 2.** Final test of the project. The physical joystick sends direction commands through the Arduino and Web Serial, and those commands control the Snake game.
+
+The completed system is:
+
+```text
+Physical joystick
+↓
+Analog X and Y readings
+↓
+Arduino direction logic
+↓
+L / R / U / D
+↓
+USB Serial
+↓
+Web Serial API
+↓
+JavaScript
+↓
+changeDirection()
+↓
+Snake movement
+```
+
+The project started with a joystick printing letters in Serial Monitor. By the end, those same letters were controlling movement inside a game running on my GitHub website.
+
+---
+
+## Final Arduino Code
+
+<details>
+<summary><strong>Show Final Arduino Code</strong></summary>
+
+```cpp
+const int xPin = A0;
+const int yPin = A1;
+const int swPin = 2;
+
+int toggleState = 0;
+
+int buttonState = HIGH;
+int lastButtonState = HIGH;
+
+unsigned long lastDebounceTime = 0;
+unsigned long debounceDelay = 50;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(swPin, INPUT_PULLUP);
+}
+
+void loop() {
+
+  int xValue = analogRead(xPin);
+  int yValue = analogRead(yPin);
+
+  if (xValue < 400) {
+    Serial.println("R");
+  }
+  else if (xValue > 600) {
+    Serial.println("L");
+  }
+  else if (yValue < 400) {
+    Serial.println("D");
+  }
+  else if (yValue > 600) {
+    Serial.println("U");
+  }
+  else {
+    Serial.println("C");
+  }
+
+  int reading = digitalRead(swPin);
+
+  if (reading != lastButtonState) {
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+
+    if (reading != buttonState) {
+      buttonState = reading;
+
+      if (buttonState == LOW) {
+        toggleState = !toggleState;
+
+        Serial.print("BUTTON: ");
+        Serial.println(toggleState);
+      }
+    }
+  }
+
+  lastButtonState = reading;
+
+  delay(100);
+}
+```
+
+</details>
+
+---
+
+## Final Snake Code
+
+<details>
+<summary><strong>Show Final Snake Game Code</strong></summary>
+
+```html
+PASTE YOUR FINAL snake.html CODE HERE
+```
+
+</details>
+
+---
+
+## Peer Support
+
+[Add your real peer-support example here.]
+
+While I was working on the project, __________ helped me with __________. I was having trouble with __________, and they suggested __________. I changed __________ after their suggestion, which helped because __________.
+
+---
+
+## Reflection
+
+The skill I relied on most was **debugging**. I tested the project in separate stages instead of connecting everything at once. I first checked the joystick, then Serial output, then Web Serial, and finally Snake.
+
+That made problems easier to locate. I could tell whether an issue came from the physical input, Arduino code, serial connection, or game code.
+
+If I continued the project, I would build a case around the Arduino and joystick so it works more like a real controller and the wires are protected.
