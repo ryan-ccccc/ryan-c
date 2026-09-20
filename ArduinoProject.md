@@ -948,14 +948,6 @@ PASTE YOUR FINAL snake.html CODE HERE
 
 ---
 
-## Peer Support
-
-[Add your real peer-support example here.]
-
-While I was working on the project, __________ helped me with __________. I was having trouble with __________, and they suggested __________. I changed __________ after their suggestion, which helped because __________.
-
----
-
 ## Reflection
 
 The skill I relied on most was **debugging**. I tested the project in separate stages instead of connecting everything at once. I first checked the joystick, then Serial output, then Web Serial, and finally Snake.
