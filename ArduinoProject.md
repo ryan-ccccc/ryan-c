@@ -27,7 +27,7 @@ body {
 
 ## Project Overview
 
-For this project, I chose to build on **analog input**. In class, we used a potentiometer to see how an Arduino can read a range of values instead of only HIGH or LOW. I wanted to use analog input for something more interactive, so I chose a joystick.
+For this project, I chose to build on analog input. In class, we used a potentiometer to see how an Arduino can read a range of values instead of only HIGH or LOW. I wanted to use analog input for something more interactive, so I chose a joystick.
 
 My final goal was to use a physical joystick connected to an Arduino to control a Snake game on my GitHub website.
 
@@ -35,7 +35,7 @@ The project developed in stages. I first got the Arduino to read the joystick an
 
 The final system works like this:
 
-**Joystick → Arduino → Serial through USB → Web Serial API → JavaScript → Snake movement**
+Joystick → Arduino → Serial through USB → Web Serial API → JavaScript → Snake movement
 
 ---
 
@@ -87,7 +87,7 @@ const int yPin = A1;
 
 This means `xValue` stores the horizontal position and `yValue` stores the vertical position.
 
-`analogRead()` gives a value from about **0 to 1023**. The middle is around 512, so when the joystick is resting near the center, both values are usually somewhere around that number.
+`analogRead()` gives a value from about 0 to 1023. The middle is around 512, so when the joystick is resting near the center, both values are usually somewhere around that number.
 
 The Arduino does not automatically know that a number means "left" or "up." My code has to interpret the numbers and turn them into directions.
 
@@ -165,7 +165,7 @@ Another problem was that the joystick did not return exactly 512 every time I le
 
 At first, I thought I could treat one exact value as the center. When I watched the readings, I saw that they moved slightly even when the joystick looked centered.
 
-Instead of checking for one exact number, I created a **dead zone**:
+Instead of checking for one exact number, I created a dead zone:
 
 ```text
 0–399      = direction
@@ -258,7 +258,7 @@ The Arduino starts Serial communication with:
 Serial.begin(9600);
 ```
 
-The number `9600` is the baud rate, or the communication speed.
+The number 9600 is the baud rate, or the communication speed.
 
 Instead of sending a long message, the Arduino sends one command:
 
@@ -286,7 +286,7 @@ That separation made the project easier to understand and debug.
 
 Before working with Snake, I created a simple webpage whose only job was to connect to the Arduino and display the direction it received.
 
-I used the **Web Serial API** in JavaScript.
+I used the Web Serial API in JavaScript.
 
 The webpage has a button:
 
@@ -433,7 +433,7 @@ The webpage would not connect correctly.
 
 I realized that Serial Monitor was already using the Arduino's serial port. The webpage was trying to access the same port at the same time.
 
-I fixed it by closing Serial Monitor before pressing **Connect Arduino**.
+I fixed it by closing Serial Monitor before pressing Connect Arduino.
 
 My testing process became:
 
@@ -564,10 +564,7 @@ async function readArduino() {
 
 Once the test webpage worked, I moved to the final game.
 
-I found a **basic Snake game online** and used it as the starting point rather than writing the whole game from scratch.
-
-**Original Snake game source:**  
-[ADD THE ACTUAL LINK OR NAME OF THE SNAKE GAME HERE]
+I found a basic Snake game online and used it as the starting point rather than writing the whole game from scratch.
 
 The base game already included the main mechanics:
 
@@ -946,7 +943,7 @@ The final Snake game uses the Arduino joystick as the controller through Web Ser
 
 ## Reflection
 
-The skill I relied on most was **debugging**. I tested the project in separate stages instead of connecting everything at once. I first checked the joystick, then Serial output, then Web Serial, and finally Snake.
+The skill I relied on most was debugging. I tested the project in separate stages instead of connecting everything at once. I first checked the joystick, then Serial output, then Web Serial, and finally Snake.
 
 That made problems easier to locate. I could tell whether an issue came from the physical input, Arduino code, serial connection, or game code.
 
