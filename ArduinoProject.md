@@ -636,11 +636,11 @@ Right adds to X, up subtracts from Y, and down adds to Y.
 
 ---
 
-## Connecting the Joystick to Snake
+## Connecting the Joystick to Snake and problem: The Website Read the Joystick but Snake Did Not Move
 
-This was the main change I made to the Snake game.
+After I got the Arduino connected to the webpage, moving the joystick correctly changed the text between LEFT, RIGHT, UP, and DOWN. However, the Snake game still did not respond.
 
-Before this, my Web Serial code could receive `"L"` and display LEFT:
+My Web Serial test code was only doing this:
 
 ```javascript
 if (line === "L") {
@@ -648,9 +648,17 @@ if (line === "L") {
 }
 ```
 
-I needed the same Serial command to control the game's movement.
+This proved that the Arduino and website were communicating, but the code was only changing text on the screen. Nothing was sending that direction into the Snake game's movement system.
 
-I created a function that handles Arduino commands:
+I looked at how the Snake game already handled movement and found that it used:
+
+```javascript
+changeDirection("left");
+```
+
+to change the snake's direction.
+
+I connected my Arduino input to that same function by creating:
 
 ```javascript
 function handleArduinoDirection(command) {
@@ -677,20 +685,26 @@ function handleArduinoDirection(command) {
 }
 ```
 
-The important change is:
+Then, whenever Web Serial finishes reading a direction from the Arduino, it runs:
+
+```javascript
+handleArduinoDirection(line);
+```
+
+The important change was connecting the Serial command to:
 
 ```javascript
 changeDirection("left");
 ```
 
-Before, `"L"` only changed text on the screen. Now `"L"` is passed into the same direction system used by the Snake game.
+Before this change, `"L"` only meant that the webpage displayed LEFT. After the change, `"L"` was also passed into the Snake game's movement code.
 
-The final path for one joystick movement is:
+The full path became:
 
 ```text
 Move joystick left
 ↓
-Arduino reads X value
+Arduino reads the X value
 ↓
 Arduino sends "L"
 ↓
@@ -702,12 +716,10 @@ changeDirection("left")
 ↓
 nextDirection becomes "left"
 ↓
-Game updates
-↓
-Snake head moves left
+Snake turns left
 ```
 
-That connection between the hardware input and the existing game controls was the main coding change I made to the base Snake game.
+This helped me understand that receiving data and using data are separate steps. Web Serial successfully brought the Arduino command into JavaScript, but I still had to connect that command to the part of the Snake game that actually controls movement.
 
 ---
 
