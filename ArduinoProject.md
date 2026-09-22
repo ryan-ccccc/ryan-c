@@ -461,9 +461,6 @@ This helped me understand that the serial connection is not only something insid
 
 I kept my original test code because it shows the step between Serial Monitor and the final Snake project.
 
-<details>
-<summary><strong>Show Original Web Serial Test Code</strong></summary>
-
 ```html
 <button id="connectButton">Connect Arduino</button>
 
@@ -555,9 +552,6 @@ async function readArduino() {
 }
 </script>
 ```
-
-</details>
-
 ---
 
 ## Adding the Snake Game
