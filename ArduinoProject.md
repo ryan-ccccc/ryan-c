@@ -954,3 +954,11 @@ The skill I relied on most was debugging. I tested the project in separate stage
 That made problems easier to locate. I could tell whether an issue came from the physical input, Arduino code, serial connection, or game code.
 
 If I continued the project, I would build a case around the Arduino and joystick so it works more like a real controller and the wires are protected.
+
+A joystick input could be useful for controlling something that needs simple directional movement, such as a robot, game controller, or camera system. For a real use, I would need to make the wiring more permanent, protect the Arduino and joystick inside a case, and make sure the controls respond consistently.
+
+If I kept developing the idea, I would rely most on debugging. This project had several connected parts, so testing the joystick, Serial output, website connection, and game separately helped me figure out where problems were coming from.
+
+## Peer Support
+
+One classmate needed help getting their website started on GitHub. I showed them how I had set up my own website and helped them get the basic page working. Explaining my process to someone else made me look at my own website differently and gave me ideas for how I could organize and improve my Innovator Journal.
