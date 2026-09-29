@@ -30,13 +30,13 @@ body {
 
 For this stage of the project, John and I are building a simple scanner using a servo motor and an ultrasonic distance sensor.
 
-The servo moves the sensor in **15° intervals**. At each angle, it stops, waits, and measures how far away an object is.
+The servo moves the sensor in 15° intervals. At each angle, it stops, waits, and measures how far away an object is.
 
 The current system works like this:
 
 **Servo moves → stops → sensor measures distance → Arduino prints angle and distance**
 
-Our next goal is to add a **stepper motor** so the scanner can move in another direction and collect more measurements.
+Our next goal is to add a stepper motor so the scanner can move in another direction and collect more measurements.
 
 ---
 
@@ -120,7 +120,7 @@ The Arduino prints both the angle and distance, for example:
 45,23.6
 ```
 
-This means the sensor was at about **45°** and detected something about **23.6 cm away**.
+This means the sensor was at about 45° and detected something about 23.6 cm away.
 
 ---
 
