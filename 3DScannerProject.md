@@ -524,3 +524,13 @@ This made us realize that we needed to understand the power requirements and wir
 Before testing it again, we plan to have the wiring and power supply checked and make sure the circuit is powered off while making connections.
 
 When we reached this point, we ran out of time to rewire and reconnect the whole system, so this is where we had to stop for now. Even though we did not complete the full scanner, we still made progress with the servo, ultrasonic sensor, stepper motor, and driver, and learned a lot from the problems we ran into.
+
+## Where We Ended
+
+Before adding the stepper motor, we had already completed a working prototype of the servo and ultrasonic scanner. The servo could move the sensor through different angles and the ultrasonic sensor could take distance measurements at each position.
+
+We then started developing the next version by adding the stepper motor. We successfully connected the A4988 driver, set the current limit, and got the stepper motor turning with Arduino code.
+
+We were not able to fully combine the stepper motor with the scanner before the end of the project because we ran into problems with the power setup. Instead of rushing the final connection, we stopped when we were unsure that the setup was safe.
+
+Even though the final version with both motors was not completed, we still moved from an idea to a working scanner prototype and then began developing a more advanced version. If we had more time, our next step would be to confirm the power setup and mount the servo scanner onto the stepper motor so both systems could work together.
