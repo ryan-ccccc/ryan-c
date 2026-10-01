@@ -299,7 +299,7 @@ At this point, the scanner can move the ultrasonic sensor back and forth in 15-d
   <source src="videos/servo-scanner-test.mp4" type="video/mp4">
 </video>
 
-**Video 1.** John and I testing the servo scanner as it stops at different angles and takes distance measurements.
+John and I testing the servo scanner as it stops at different angles and takes distance measurements.
 
 ---
 
