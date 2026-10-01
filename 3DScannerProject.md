@@ -99,9 +99,9 @@ Servo signal → Pin 9
 
 <!-- PHOTO: Add a photo of the whole scanner setup here -->
 
-<img width="820" height="1080" alt="93fe708cf5f01cc86b67540fb686ab30" src="https://github.com/user-attachments/assets/5e53eb87-e2c1-492c-afcd-d93bbabb872d" />
+<img width="410" height="540" alt="93fe708cf5f01cc86b67540fb686ab30" src="https://github.com/user-attachments/assets/5e53eb87-e2c1-492c-afcd-d93bbabb872d" />
 
-<img width="820" height="1080" alt="ce49f9da8a1fa438a202cf5a1ccbbaed" src="https://github.com/user-attachments/assets/b2635698-0a25-4f9e-b16e-2c45e636c6f8" />
+<img width="410" height="540" alt="ce49f9da8a1fa438a202cf5a1ccbbaed" src="https://github.com/user-attachments/assets/b2635698-0a25-4f9e-b16e-2c45e636c6f8" />
 
 
 **Figure 1.** Our current servo and ultrasonic sensor setup.
