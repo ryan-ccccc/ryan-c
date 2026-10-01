@@ -449,4 +449,5 @@ This first test helped us separate the project into smaller pieces. Before tryin
   Your browser does not support the video tag.
 </video>
 
-**Video 3.** John and I testing the stepper motor after connecting it to the A4988 driver and Arduino.
+John and I testing the stepper motor after connecting it to the A4988 driver and Arduino.
+
