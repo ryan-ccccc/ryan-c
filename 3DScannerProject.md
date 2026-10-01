@@ -523,4 +523,4 @@ This made us realize that we needed to understand the power requirements and wir
 
 Before testing it again, we plan to have the wiring and power supply checked and make sure the circuit is powered off while making connections.
 
-When we reached this point, we ran out of time to rewire and reconnect everything so we only could end at this point but we still think that we achieved and learned a lot during this process.
+When we reached this point, we ran out of time to rewire and reconnect the whole system, so this is where we had to stop for now. Even though we did not complete the full scanner, we still made progress with the servo, ultrasonic sensor, stepper motor, and driver, and learned a lot from the problems we ran into.
