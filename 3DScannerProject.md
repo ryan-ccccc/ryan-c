@@ -42,45 +42,100 @@ Starting with only the servo made the project easier to test because we could fo
 
 ---
 
-## Using AI
+## How We Used AI
 
-AI was a major part of how we got started with the code.
+AI was an important tool throughout this project, especially when John and I were trying to figure out how separate components could eventually work together as one scanner. We used ChatGPT with GPT-6 Astra to help us plan parts of the project, generate starting code, explain unfamiliar code, and troubleshoot ideas before testing them on the actual hardware.
 
-We explained that we wanted a servo to stop every 15 degrees and an ultrasonic sensor to measure distance at each position. AI gave us most of the first version of the Arduino code and helped us understand how the servo and distance sensor could work together.
+We did not begin by asking AI to make the entire scanner at once. Our prompts became more specific as the project developed.
 
-We did not understand every line immediately, so we went through the code and figured out what the important parts were.
+One of our first prompts was based on the servo and ultrasonic sensor. We asked something similar to:
 
-For example:
+```text
+How do I make a servo stop at certain points, like every 15 degrees,
+and use a distance sensor to detect an object and scan it?
+```
+
+From that prompt, AI suggested using a positional servo and moving it with:
 
 ```cpp
 scannerServo.write(angle);
 ```
 
-tells the servo which angle to move to.
+It also gave us a starting program that moved the servo in 15-degree intervals and took an ultrasonic distance measurement at each position.
+
+At first, most of that code came from AI. Instead of copying it into the project without understanding it, we asked follow-up questions about the individual parts of the program. For example, we asked what the functions did, why the servo needed a delay before measuring, and how the ultrasonic sensor changed the echo time into centimeters.
+
+That helped us understand important lines such as:
 
 ```cpp
 const int stepAngle = 15;
 ```
 
-controls how far the servo moves each time.
-
-We also learned that:
-
-```cpp
-pulseIn(echoPin, HIGH, 30000UL);
-```
-
-measures how long the ultrasonic echo takes to return.
-
-The distance is then calculated with:
+which controls the size of each servo movement, and:
 
 ```cpp
 float distance = duration / 58.0;
 ```
 
-AI helped us create the starting code, while John and I were responsible for wiring the parts, testing the system, deciding how we wanted the scanner to move, and understanding what the code was doing.
+which converts the ultrasonic sensor's echo time into an approximate distance in centimeters.
 
----
+Later, when we started working with the stepper motor, we used both the YouTube tutorial and AI. The tutorial was more useful for the physical wiring, A4988 driver, and current-limit setup because we could see the actual components being connected.
+
+After getting the basic stepper motor working, we asked AI how we could combine it with the servo scanner. Our prompt was similar to:
+
+```text
+Give me the Arduino code for having the scanner on the stepper motor.
+```
+
+AI suggested a program where the servo completes a scan, the stepper moves the whole scanner to another position, and then the servo scans again.
+
+The idea was:
+
+```text
+Servo scans at one stepper position
+↓
+Stepper moves
+↓
+Servo scans again
+↓
+Stepper moves again
+```
+
+We then asked AI to explain the entire program instead of only giving us the finished code. We went through the functions for the stepper motor, servo, ultrasonic sensor, and Serial output so we could understand how the different parts were connected.
+
+### Problems and Limits With Using AI
+
+AI was useful, but it did not mean that the answers automatically worked with our physical project.
+
+One issue was that AI had to make assumptions about our hardware. For example, some of the stepper code assumed a common 200-step motor and a certain driver setup. We still had to compare that information with the tutorial and the actual components in front of us.
+
+AI could also explain how something should be connected in theory, but it could not see every detail of our real wiring unless we gave it that information. This became especially important when we started dealing with the stepper motor power supply and current limit.
+
+There were also times when an AI response gave us much more code or information than we actually needed. We had to narrow down our questions and ask about one stage at a time. That is one reason we tested the project in separate parts instead of trying to build the full scanner immediately.
+
+Our process became:
+
+```text
+Come up with the next goal
+↓
+Ask AI or use the tutorial for a starting point
+↓
+Read and understand the important parts
+↓
+Build or wire it ourselves
+↓
+Test it on the real hardware
+↓
+Find what does not work
+↓
+Ask more specific questions or change the setup
+↓
+Test again
+```
+
+AI did most of the initial coding for the servo scanner and helped us develop the combined scanner code, but John and I still had to physically build the system, choose how we wanted it to move, test each component, compare the AI suggestions with the tutorial, and decide what changes actually worked.
+
+The biggest thing we learned from using AI was that getting code from AI is different from having a working project. We still needed to understand enough of the code to test it, recognize when something did not match our hardware, and explain what each major part was doing.
 
 ## Building the First Version
 
