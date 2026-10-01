@@ -110,14 +110,6 @@ The program uses `-1` to identify an unusable reading and prints `no_reading` in
 
 The Serial Monitor prints the commanded angle followed by the measured distance. For example, `45,23.6` would mean a command of 45 degrees and a reading of 23.6 cm. This is an example of the format, not a recorded test result.
 
-### Testing the Starting Program
-
-John and I connected the sensor and servo and mounted the sensor so it turned with the servo arm. We tested whether the program could move through the positions and collect distance readings during the pauses.
-
-The servo moved back and forth in 15-degree intervals while the program collected readings. This showed that the movement and measurement sequence worked together. We still needed to check the accuracy before treating the readings as a reliable outline of an object.
-
-The angle printed by the program is the angle requested in the code. It does not independently measure the servo's actual position. Understanding that helped me separate what the program was commanding from what had been physically verified.
-
 ### Problems and Limits With Using AI
 
 AI was useful, but it did not mean that the answers automatically worked with our physical project.
