@@ -451,3 +451,14 @@ This first test helped us separate the project into smaller pieces. Before tryin
 
 John and I testing the stepper motor after connecting it to the A4988 driver and Arduino.
 
+## Problem: Powering the Stepper Motor
+
+When we tried to add the stepper motor to the scanner, we ran into a problem with the power setup. The voltage and power needed for the stepper motor were much higher than what we were already using for the servo and sensor, and we were worried that connecting it incorrectly could damage the scanner or the Arduino.
+
+We started trying to connect the stepper motor setup, but during the process John received a small electrical shock. At that point, we stopped working with the powered circuit instead of continuing to experiment with it.
+
+This made us realize that we needed to understand the power requirements and wiring more clearly before combining the stepper motor with the rest of the scanner. Rather than risk damaging the components or getting shocked again, we decided to pause this part and check the power setup before continuing.
+
+Before testing it again, we plan to have the wiring and power supply checked and make sure the circuit is powered off while making connections.
+
+When we reached this point, we ran out of time to rewire and reconnect everything so we only could end at this point but we still think that we achieved and learned a lot during this process.
