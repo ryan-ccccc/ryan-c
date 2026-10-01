@@ -44,64 +44,79 @@ Starting with only the servo made the project easier to test because we could fo
 
 ## How We Used AI
 
-AI was an important tool throughout this project, especially when John and I were trying to figure out how separate components could eventually work together as one scanner. We used ChatGPT with GPT-6 Astra to help us plan parts of the project, generate starting code, explain unfamiliar code, and troubleshoot ideas before testing them on the actual hardware.
+John and I used ChatGPT with GPT-6 Astra to help develop the servo and ultrasonic scanner. We used it to generate starting code, explain unfamiliar functions, and understand how to make the movement and distance measurements happen in order.
 
-We did not begin by asking AI to make the entire scanner at once. Our prompts became more specific as the project developed.
+My idea was to make the servo stop every 15 degrees so the sensor could take a reading at each position. Most of the starting program came from AI. John and I chose the movement interval, connected the components, mounted the sensor, and tested the setup.
 
-One of our first prompts was based on the servo and ultrasonic sensor. We asked something similar to:
+### What We Asked AI
 
-```text
-How do I make a servo stop at certain points, like every 15 degrees,
-and use a distance sensor to detect an object and scan it?
-```
+My first request was about combining the servo movement with distance detection. A shortened version of the prompt was:
 
-From that prompt, AI suggested using a positional servo and moving it with:
+> How do I make a servo stop every 15 degrees and use a distance sensor to detect an object and scan it?
+
+AI suggested a positional servo and an HC-SR04 ultrasonic sensor. It generated a program that moved the servo from 15 to 165 degrees in 15-degree intervals, took a measurement at each position, and then scanned back.
+
+The generated program included the movement loops, a function for reading distance, pauses between actions, and Serial output. This gave us a starting point for testing the sensor and servo together.
+
+After receiving the code, we asked follow-up questions about what the functions did, why the servo needed a delay, and how the sensor converted echo time into centimetres. Our questions became more focused as we worked through the program.
+
+### Understanding How the Servo Stops
+
+One command we needed to understand was:
 
 ```cpp
 scannerServo.write(angle);
 ```
 
-It also gave us a starting program that moved the servo in 15-degree intervals and took an ultrasonic distance measurement at each position.
+This sends the positional servo a target angle. The servo still needs time to move there, so the code waits before measuring.
 
-At first, most of that code came from AI. Instead of copying it into the project without understanding it, we asked follow-up questions about the individual parts of the program. For example, we asked what the functions did, why the servo needed a delay before measuring, and how the ultrasonic sensor changed the echo time into centimeters.
-
-That helped us understand important lines such as:
+These settings control the spacing between positions and the waiting time:
 
 ```cpp
 const int stepAngle = 15;
+const int settleTime = 500;
 ```
 
-which controls the size of each servo movement, and:
+The 15-degree interval came from my original request. The half-second settling time was included in the AI-generated code. It gives the servo time to reach its position before the sensor takes a reading. The program also waits another half second after measuring before moving again.
+
+Understanding these settings helped me follow the sequence on the actual setup: the servo moves, pauses, the sensor measures, and then the servo continues.
+
+### Understanding the Sensor Readings
+
+We also wanted to understand how the sensor produced a distance. The program uses:
 
 ```cpp
+unsigned long duration =
+  pulseIn(echoPin, HIGH, 30000UL);
+
 float distance = duration / 58.0;
 ```
 
-which converts the ultrasonic sensor's echo time into an approximate distance in centimeters.
+The ultrasonic sensor sends out sound, and `pulseIn()` measures the length of the returning echo signal in microseconds. Dividing that time by `58.0` gives an approximate distance in centimetres, accounting for the sound travelling to the object and back.
 
-Later, when we started working with the stepper motor, we used both the YouTube tutorial and AI. The tutorial was more useful for the physical wiring, A4988 driver, and current-limit setup because we could see the actual components being connected.
+The `30000UL` value sets a timeout. If no echo arrives within that time, the function returns zero rather than leaving the program waiting indefinitely.
 
-After getting the basic stepper motor working, we asked AI how we could combine it with the servo scanner. Our prompt was similar to:
+AI also included checks for failed measurements:
 
-```text
-Give me the Arduino code for having the scanner on the stepper motor.
+```cpp
+if (duration == 0) return -1;
+
+if (distance < 2 || distance > 400) {
+  return -1;
+}
 ```
 
-AI suggested a program where the servo completes a scan, the stepper moves the whole scanner to another position, and then the servo scans again.
+The program uses `-1` to identify an unusable reading and prints `no_reading` in the Serial Monitor. This prevents a failed reading from appearing as a real distance of zero.
 
-The idea was:
+The Serial Monitor prints the commanded angle followed by the measured distance. For example, `45,23.6` would mean a command of 45 degrees and a reading of 23.6 cm. This is an example of the format, not a recorded test result.
 
-```text
-Servo scans at one stepper position
-↓
-Stepper moves
-↓
-Servo scans again
-↓
-Stepper moves again
-```
+### Testing the Starting Program
 
-We then asked AI to explain the entire program instead of only giving us the finished code. We went through the functions for the stepper motor, servo, ultrasonic sensor, and Serial output so we could understand how the different parts were connected.
+John and I connected the sensor and servo and mounted the sensor so it turned with the servo arm. We tested whether the program could move through the positions and collect distance readings during the pauses.
+
+The servo moved back and forth in 15-degree intervals while the program collected readings. This showed that the movement and measurement sequence worked together. We still needed to check the accuracy before treating the readings as a reliable outline of an object.
+
+The angle printed by the program is the angle requested in the code. It does not independently measure the servo's actual position. Understanding that helped me separate what the program was commanding from what had been physically verified.
 
 ### Problems and Limits With Using AI
 
