@@ -313,7 +313,7 @@ We had not worked with this type of stepper motor and driver before, so we follo
 
 [Control a NEMA 17 Stepper Motor with A4988 Driver and Arduino](https://www.youtube.com/watch?v=wcLeXXATCR4)
 
-The tutorial showed us how to connect the **NEMA 17 stepper motor, A4988 motor driver, Arduino, and external power supply**.
+The tutorial showed us how to connect the NEMA 17 stepper motor, A4988 motor driver, Arduino, and external power supply.
 
 For this stage, the tutorial was our main source rather than AI. We followed the wiring shown in the video and stopped at different points to make sure we understood what each connection was doing before continuing.
 
@@ -321,7 +321,7 @@ For this stage, the tutorial was our main source rather than AI. We followed the
 
 ## Stepper Motor Setup
 
-One thing we learned was that the stepper motor is not controlled directly from the Arduino. The **A4988 driver** is between the Arduino and the motor.
+One thing we learned was that the stepper motor is not controlled directly from the Arduino. The A4988 driver is between the Arduino and the motor.
 
 The Arduino sends the driver instructions such as which direction to move and when to take a step. The driver handles the higher current needed by the stepper motor.
 
