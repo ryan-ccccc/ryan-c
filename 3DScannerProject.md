@@ -356,4 +356,97 @@ This was one of the messier parts of the project because the problem was not wit
 
 At this point, we have started setting up the stepper motor and driver and have adjusted the current limit. Our next step is to get the Arduino controlling the stepper motor and then figure out how to combine its movement with the servo and distance sensor.
 
+## Connecting and Testing the Stepper Motor
 
+After setting the current limit, John and I connected the stepper motor to the A4988 driver.
+
+The stepper motor has four wires that connect to the motor outputs on the driver. This part was a little confusing because the wires are connected in pairs inside the motor, and they have to go to the correct motor terminals on the driver. We had to pay attention to which wires belonged together instead of just connecting them randomly.
+
+The Arduino also connects to the driver using two important control pins:
+
+```text
+DIR  → Arduino Pin 2
+STEP → Arduino Pin 3
+```
+
+`DIR` controls which direction the motor turns. `STEP` controls when the motor moves one step.
+
+At this point, our goal was not to connect the stepper motor to the whole scanner yet. We first wanted to see if we could make the motor turn by itself.
+
+---
+
+## Making the Stepper Motor Turn
+
+For our first test, we copied the basic stepper motor code from the YouTube tutorial we were following.
+
+```cpp
+const int dirPin = 2;
+const int stepPin = 3;
+
+void setup() {
+  pinMode(dirPin, OUTPUT);
+  pinMode(stepPin, OUTPUT);
+
+  delay(2000);
+  digitalWrite(dirPin, HIGH);
+}
+
+void loop() {
+  digitalWrite(stepPin, HIGH);
+  delayMicroseconds(5000);
+
+  digitalWrite(stepPin, LOW);
+  delayMicroseconds(5000);
+}
+```
+
+Even though we copied this starting code from the tutorial, we went through it so we understood what it was doing.
+
+These lines:
+
+```cpp
+const int dirPin = 2;
+const int stepPin = 3;
+```
+
+tell the Arduino which pins are connected to the `DIR` and `STEP` inputs on the motor driver.
+
+In `setup()`, these lines:
+
+```cpp
+pinMode(dirPin, OUTPUT);
+pinMode(stepPin, OUTPUT);
+```
+
+make both pins outputs because the Arduino is sending signals to the driver.
+
+The line:
+
+```cpp
+digitalWrite(dirPin, HIGH);
+```
+
+sets the direction of the motor. Changing it from `HIGH` to `LOW` would make the motor turn in the opposite direction.
+
+The most important part is:
+
+```cpp
+digitalWrite(stepPin, HIGH);
+delayMicroseconds(5000);
+digitalWrite(stepPin, LOW);
+delayMicroseconds(5000);
+```
+
+The STEP pin repeatedly switches between HIGH and LOW. Each pulse tells the driver to move the stepper motor another step.
+
+The delays also affect how quickly the pulses are sent. With a `5000` microsecond delay between changes, the motor turns relatively slowly. A shorter delay would send the pulses faster and make the motor turn faster.
+
+This first test helped us separate the project into smaller pieces. Before trying to combine the stepper motor with the servo and ultrasonic sensor, we wanted to make sure the motor, driver, wiring, and basic code could work on their own.
+
+
+<video width="700" controls style="max-width: 100%;">
+  <source src="videos/stepper-motor-test.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+**Video 3.** John and I testing the stepper motor after connecting it to the A4988 driver and Arduino.
