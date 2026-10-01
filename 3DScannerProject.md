@@ -355,3 +355,5 @@ This was one of the messier parts of the project because the problem was not wit
 ## Current Progress
 
 At this point, we have started setting up the stepper motor and driver and have adjusted the current limit. Our next step is to get the Arduino controlling the stepper motor and then figure out how to combine its movement with the servo and distance sensor.
+
+
