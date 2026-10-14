@@ -23,7 +23,7 @@ body {
 }
 </style>
 
-# Arcade Unit: First Experiments with Browser Games
+# One-shot Game and Autopsy
 
 ## Starting Point
 
