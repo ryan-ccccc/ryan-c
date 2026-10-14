@@ -143,6 +143,8 @@ I also noticed that an AI’s description does not always match its code. WebbGP
 
 1. **Understand how the GUI connects to the code.** In my chosen game, I will identify an HTML element, a CSS rule, and a JavaScript function and explain how each affects what I see or control.
 
-2. **Make and test one change myself.** I will change a value such as player speed or object size, predict the result before running the game, and document what actually happens with before-and-after screenshots.
+2. **Create a game that is more advanced than Pong.** I will attempt to create a new game that has more controls than pong.
 
-3. **Improve how I report problems.** Instead of only saying “it doesnt work,” I will describe the steps I took, what I expected, what happened, and any error message. I will ask WebbGPT to explain its suggested fix so I can connect the problem to the code.
+3. **Improve how I report problems.** Instead of only saying “it doesnt work,” I will describe the steps I took, what I expected, what happened, and any error message. I will ask ChatGPT to explain its suggested fix so I can connect the problem to the code.
+
+
