@@ -21,3 +21,5 @@ I want to keep learning new skills, improve at designing and creating things, an
 [View my Snake Game controlled by a joystick](snake.html)
 
 [View my 3D Scanner Project with John](3DScannerProject.md)
+
+[Arcade Unit: Game and Code Autopsy](GameandAutopsy.md)
