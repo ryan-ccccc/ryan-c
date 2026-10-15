@@ -260,10 +260,6 @@ Friction reduces the speed while preserving its direction. Eventually, the code 
 
 The loop uses `requestAnimationFrame(loop)` to schedule another frame. It can run several small physics updates before drawing once. This separates the timing of the movement calculations from the browser’s display rate.
 
-**[Screenshot 3: Capture `shoot()` and the position-update lines in `update()`. Beside them, include the end of `loop()`, showing the repeated updates followed by `draw()`. Use separate readable crops rather than shrinking the whole file into one image.]**
-
-*Caption: Input sets velocity, updates change position, and rendering displays the result.*
-
 ### Expanding the Courses and Finding Repetition
 
 I next requested five larger holes with increasing difficulty and a two-player mode. However, the first expanded version used too many similar straight barriers. I told ChatGPT:
@@ -292,7 +288,7 @@ These revisions were gameplay adjustments rather than fixes for syntax errors. T
 
 The pond data is also used to draw the water. This connects the visible hazard to the detection area.
 
-**[Screenshot 4: Show hole 3 with both ponds, the grass crossing, and the remaining short rail. Add a screenshot or recording of entering water, receiving the penalty, and returning to the tee.]**
+<img width="885" height="796" alt="Screenshot 2026-10-14 at 6 56 35 PM" src="https://github.com/user-attachments/assets/ed90b212-c504-4ffc-a858-cf63a8c923b4" />
 
 *Caption: I changed the hazard layout through several revisions to balance risk with room to recover.*
 
@@ -320,9 +316,12 @@ The first gentle version used a speed cap of 110. Increasing that cap to 240 all
 
 A simplified straight-on example helps me follow the calculation. If one ball approaches a stationary ball at 300 pixels per second, the current collision calculation gives speeds of 75 and 225 before damping. Multiplying by 0.8 reduces them to 60 and 180. Neither reaches the speed cap.
 
-**[Screenshot 5: Capture the collision constants and the distance check inside `collideBalls()`. Add a short recording showing one ball hitting the other and both coming to rest.]**
+<video controls playsinline preload="metadata" style="width: 100%;">
+  <source src="ball-collisions.mp4" type="video/mp4">
+  Your browser does not support embedded video.
+</video>
 
-*Caption: I requested stronger collisions, while the code retained damping and a speed limit.*
+<p><em>One ball hits the other, transferring movement. The game waits for both balls to stop before switching turns.</em></p>
 
 ### Understanding Why Both Balls Must Finish Moving
 
