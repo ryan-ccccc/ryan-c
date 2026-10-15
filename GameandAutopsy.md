@@ -226,7 +226,7 @@ The power listener checks for `ArrowUp` and `ArrowDown`. It adds or subtracts fi
 This is an example of how an input can affect state without immediately moving the ball. Changing power updates the selected strength. The ball only receives that strength as velocity when a shot is taken.
 
 <video controls playsinline preload="metadata" style="width: 100%;">
-  <source src="power-controls.mp4" type="video/mp4">
+  <source src="videos/power-controls.mp4" type="video/mp4">
   Your browser does not support embedded video.
 </video>
 
@@ -317,7 +317,7 @@ The first gentle version used a speed cap of 110. Increasing that cap to 240 all
 A simplified straight-on example helps me follow the calculation. If one ball approaches a stationary ball at 300 pixels per second, the current collision calculation gives speeds of 75 and 225 before damping. Multiplying by 0.8 reduces them to 60 and 180. Neither reaches the speed cap.
 
 <video controls playsinline preload="metadata" style="width: 100%;">
-  <source src="ball-collisions.mp4" type="video/mp4">
+  <source src="videos/ball-collisions.mp4" type="video/mp4">
   Your browser does not support embedded video.
 </video>
 
