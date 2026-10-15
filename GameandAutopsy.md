@@ -147,4 +147,217 @@ I also noticed that an AI’s description does not always match its code. WebbGP
 
 3. **Improve how I report problems.** Instead of only saying “it doesnt work,” I will describe the steps I took, what I expected, what happened, and any error message. I will ask ChatGPT to explain its suggested fix so I can connect the problem to the code.
 
+## Developing My Own Game: Mini Golf
+
+[Play my mini-golf game](minigolf.html)
+
+### Choosing a Game and Starting Small
+
+After the Pong and Tag experiments, I chose mini golf for my main game. It connected to my interest in sports and gave me specific mechanics to investigate: aiming, choosing power, moving the ball, hitting obstacles, and reaching a cup.
+
+My first request to ChatGPT was:
+
+> try the minigolf game and then explain to me how the main mechanics work
+
+I wanted the explanation alongside the game because my goal was to understand what the code was doing. The first version contained one hole, one rectangular obstacle, a power slider, and a stroke counter. This gave me a smaller starting point for trying the controls and reading the main functions.
+
+ChatGPT generated the file and explained the relationship between aiming, velocity, friction, collisions, and drawing. I then used the game as a starting point for deciding what needed to change.
+
+<img width="1372" height="781" alt="Screenshot 2026-10-14 at 6 48 23 PM" src="https://github.com/user-attachments/assets/a770640f-7798-42e8-8afa-2395f7b362ca" />
+
+*Caption: I started with one hole so I could investigate the main mechanics before expanding the game.*
+
+### Connecting Input, State, Updates, and Rendering
+
+The main relationship I am learning to follow is:
+
+**Player input → changes to stored values → game updates → drawing the result**
+
+In my game, pressing Space runs `shoot()`. This function reads the selected power and aiming angle, changes the ball’s velocity, adds one stroke, and sets `shotInProgress` to `true`.
+
+The game loop then calls `update()` to move the balls, slow them down, and check collisions. After the updates, `draw()` displays the current positions on the canvas.
+
+This explains why the ball’s movement involves more than one function. The keyboard listener detects the input. The shot function changes the state. The update function applies the movement. The drawing function makes that movement visible.
+
+The important state values include:
+
+| State | What it remembers |
+| --- | --- |
+| Each ball’s `x` and `y` | Its position on the course. |
+| Each ball’s `vx` and `vy` | Its horizontal and vertical velocity. |
+| `activePlayer` | Whose turn it is. |
+| `holeIndex` | Which course is loaded. |
+| Each player’s `scores` and `done` arrays | Their strokes and completion status for each hole. |
+| `shotInProgress` | Whether another shot should be blocked while the current shot is resolving. |
+
+These values continue to exist between frames. The game does not recreate the score or forget the ball’s position every time it draws the screen.
+
+### Understanding the Interface and Canvas
+
+The file is called `minigolf.html`, but it contains HTML, CSS, and JavaScript.
+
+HTML creates elements such as the canvas, power slider, buttons, and score table. CSS controls their appearance and layout. JavaScript handles the game rules, updates the interface, and draws the course.
+
+For example, the power slider is created in HTML. CSS controls how it looks, while JavaScript reads its value when I shoot. This gives me a concrete example of the three languages working together.
+
+The first course uses a canvas size of 900 by 520 pixels. Later courses have larger internal dimensions, reaching 1,500 by 860 on hole 7. CSS scales the canvas to fit the page.
+
+That creates an important issue for mouse input. The pointer’s screen coordinates must be converted into canvas coordinates. If a 1,500-pixel-wide canvas is displayed at 750 pixels wide, moving 100 screen pixels represents 200 canvas pixels. Without that conversion, the aim could become inaccurate when the display size changed.
+
+### Improving Aiming and Power Controls
+
+After trying the first version, I felt that adjusting the direction was too slow. I asked for mouse aiming and a specific key for putting. Later, I requested arrow-key power control so I could adjust strength without moving my mouse away from the course.
+
+The current controls are:
+
+- Mouse movement to aim.
+- Up and down arrows to change power by 5%.
+- Space to putt.
+- A slider as another way to adjust power.
+
+`updateAim()` finds the direction from the ball to the pointer:
+
+`aimAngle = Math.atan2(y - b.y, x - b.x)`
+
+The subtraction gives the horizontal and vertical differences. `Math.atan2()` converts those differences into an angle.
+
+The power listener checks for `ArrowUp` and `ArrowDown`. It adds or subtracts five, then limits the value to between 5 and 100. It also uses `event.preventDefault()` so the arrow keys control power instead of scrolling the page.
+
+This is an example of how an input can affect state without immediately moving the ball. Changing power updates the selected strength. The ball only receives that strength as velocity when a shot is taken.
+
+<video controls playsinline preload="metadata" style="width: 100%;">
+  <source src="power-controls.mp4" type="video/mp4">
+  Your browser does not support embedded video.
+</video>
+
+<p><em>The arrow keys change shot power by 5% while the mouse keeps the aiming direction in place.</em></p>
+
+### Following a Shot Through the Code
+
+In `shoot()`, power becomes speed:
+
+`const speed = Number(powerInput.value) / 100 * MAX_SPEED`
+
+Since `MAX_SPEED` is 620 pixels per second, 50% power produces a starting speed of 310 pixels per second.
+
+The aiming angle separates this speed into horizontal and vertical velocity:
+
+`b.vx = Math.cos(aimAngle) * speed`
+
+`b.vy = Math.sin(aimAngle) * speed`
+
+A shot directly right has horizontal movement and no vertical movement. A diagonal shot uses both components.
+
+The update function changes the position:
+
+`b.x += b.vx * dt`
+
+`b.y += b.vy * dt`
+
+Here, `dt` represents elapsed time for a physics step. The game uses steps of `1 / 120` of a second. At 240 pixels per second, the ball would move two pixels during one step before accounting for collisions and friction.
+
+Friction reduces the speed while preserving its direction. Eventually, the code sets very slow movement to zero so the ball comes to a complete stop.
+
+The loop uses `requestAnimationFrame(loop)` to schedule another frame. It can run several small physics updates before drawing once. This separates the timing of the movement calculations from the browser’s display rate.
+
+**[Screenshot 3: Capture `shoot()` and the position-update lines in `update()`. Beside them, include the end of `loop()`, showing the repeated updates followed by `draw()`. Use separate readable crops rather than shrinking the whole file into one image.]**
+
+*Caption: Input sets velocity, updates change position, and rendering displays the result.*
+
+### Expanding the Courses and Finding Repetition
+
+I next requested five larger holes with increasing difficulty and a two-player mode. However, the first expanded version used too many similar straight barriers. I told ChatGPT:
+
+> the holes are just kinda like repeating
+
+This helped me identify a difference between adding more content and adding different decisions. A larger course could still feel repetitive if the player kept navigating the same type of obstacle.
+
+I asked for curved obstacles and places where the ball could fall off the map. The next version introduced circular bumpers, crescent-shaped walls, a narrow crossing, and winding platforms.
+
+The courses are stored in the `COURSES` array. Each course contains its dimensions, starting position, cup, obstacles, and any water hazards. `loadHole()` selects that information and resets the players’ positions for the new hole.
+
+This allows the game to reuse its movement and drawing functions across different layouts.
+
+### Revising the Water Hazards
+
+The first falling-hazard version became too frustrating because too much of the surrounding area was a drop. I asked for hazards only in certain places and protective walls along some edges.
+
+The revised version used grass as the main surface, solid outer walls, and separate blue ponds. Entering water returned the affected ball to that hole’s tee with one penalty stroke.
+
+I later felt that too many walls protected the ponds, so I asked for some rails to be shortened or removed. This kept water relevant without making every missed shot leave the course.
+
+These revisions were gameplay adjustments rather than fixes for syntax errors. The code could run, but its behavior did not match the experience I wanted.
+
+`isInWater()` checks whether the ball’s center is inside a pond. Rectangular ponds use comparisons with their four edges. Circular ponds use the distance from the ball to the pond’s center.
+
+The pond data is also used to draw the water. This connects the visible hazard to the detection area.
+
+**[Screenshot 4: Show hole 3 with both ponds, the grass crossing, and the remaining short rail. Add a screenshot or recording of entering water, receiving the penalty, and returning to the tee.]**
+
+*Caption: I changed the hazard layout through several revisions to balance risk with room to recover.*
+
+### Adding and Adjusting Ball Collisions
+
+The first two-player version tracked separate balls without making them collide. I requested a small bump so players could affect each other’s positions.
+
+That first collision version was too weak for what I wanted. I then asked for stronger collisions while keeping a limit on the resulting speed.
+
+ChatGPT wrote and revised the collision code. I directed the changes based on how the interaction felt and used the code to identify the settings responsible for its strength.
+
+`collideBalls()` calculates the distance between the ball centers using `Math.hypot(dx, dy)`. Each ball has a radius of 10 pixels. When their centers are less than 20 pixels apart, the balls overlap.
+
+The function first separates them. It then checks whether they are moving toward each other before applying a push. If they are already separating, it returns without applying another impulse. This prevents the same contact from repeatedly adding movement.
+
+The current settings are:
+
+| Setting | Value | Role |
+| --- | --- | --- |
+| `BALL_RESTITUTION` | `0.5` | Affects how strongly the balls separate during the impact calculation. |
+| `IMPACT_DAMPING` | `0.8` | Reduces the resulting velocity components after impact. |
+| `MAX_BUMP_SPEED` | `240` | Limits each ball’s speed after the collision. |
+
+The first gentle version used a speed cap of 110. Increasing that cap to 240 allowed a more noticeable bump. The effect also depends on damping, the impact direction, and the incoming speed, so the cap alone does not determine every collision.
+
+A simplified straight-on example helps me follow the calculation. If one ball approaches a stationary ball at 300 pixels per second, the current collision calculation gives speeds of 75 and 225 before damping. Multiplying by 0.8 reduces them to 60 and 180. Neither reaches the speed cap.
+
+**[Screenshot 5: Capture the collision constants and the distance check inside `collideBalls()`. Add a short recording showing one ball hitting the other and both coming to rest.]**
+
+*Caption: I requested stronger collisions, while the code retained damping and a speed limit.*
+
+### Understanding Why Both Balls Must Finish Moving
+
+Ball collisions changed more than the bounce calculation. A player’s shot could now move the opponent’s ball, so the game needed to update both balls.
+
+The current code waits until both unfinished balls have stopped and any water-reset animation has finished before switching turns. This is controlled by the `stillMoving` check.
+
+Each player has their own scores and completion flags. If a bumped ball enters water, the penalty belongs to that ball’s owner. If a player finishes a hole, the turn-selection code skips them until the next hole.
+
+This shows how adding one feature can affect several sections of a program. Ball collisions required changes to movement, penalties, and turn handling as well as contact detection.
+
+### Refining the Cup and Reaching Seven Holes
+
+The original cup required a slow arrival. I asked to remove the speed restriction because I wanted accurate shots to count at any speed.
+
+Later, I requested a smaller cup and hitbox. The current comparison checks whether the ball’s center is within the cup’s radius:
+
+`Math.hypot(b.x - course.cup.x, b.y - course.cup.y) <= (course.cup.r || CUP_RADIUS)`
+
+Most cups have a radius of 14 pixels. Hole 7 uses 12. The earlier, more generous check also included the ball’s radius, so the outside edge of the ball could touch the cup and count.
+
+This helped me distinguish a visible shape from its hitbox. Making the drawing smaller would not make the game more precise unless the detection area also changed.
+
+I expanded the game to seven holes and requested that hole 7 be the hardest. It combines the largest course area, exposed ponds, several obstacles, and a small cup inside a curved barrier. That is the intended difficulty progression, but it still needs to be evaluated through complete playthroughs.
+
+**[Screenshot 6: Capture hole 7 with its name, hazards, and cup visible. Add a readable crop of the cup-detection comparison and the radius settings.]**
+
+*Caption: The final course combines earlier mechanics and uses a smaller target, while still allowing successful shots at any speed.*
+
+
+### Outcome, AI Use, and Scope
+
+The current result is a seven-hole mini-golf game with one-player and two-player modes, mouse aiming, arrow-key power control, curved obstacles, water penalties, ball collisions, and a scorecard. I downloaded `minigolf.html` and added it to my GitHub project.
+
+ChatGPT generated the initial code and implemented the revisions. I selected the game, evaluated versions, identified problems, requested changes, and asked for explanations. My prompts became more specific as I had actual results to respond to.
+
+The project also grew substantially from the first one-hole version. Although I kept aiming and putting as the core mechanic, multiplayer and hazards added more state and interactions. I now need to pause expansion and focus on understanding and verifying the existing game.
 
