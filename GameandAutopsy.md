@@ -347,7 +347,7 @@ This helped me distinguish a visible shape from its hitbox. Making the drawing s
 
 I expanded the game to seven holes and requested that hole 7 be the hardest. It combines the largest course area, exposed ponds, several obstacles, and a small cup inside a curved barrier. That is the intended difficulty progression, but it still needs to be evaluated through complete playthroughs.
 
-**[Screenshot 6: Capture hole 7 with its name, hazards, and cup visible. Add a readable crop of the cup-detection comparison and the radius settings.]**
+<img width="885" height="835" alt="Screenshot 2026-10-14 at 7 01 43 PM" src="https://github.com/user-attachments/assets/679eef89-b2bc-49c3-b2cc-cee1b1fdf759" />
 
 *Caption: The final course combines earlier mechanics and uses a smaller target, while still allowing successful shots at any speed.*
 
