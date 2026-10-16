@@ -378,45 +378,11 @@ These changes use the existing COURSES array. Each hole stores its dimensions, s
 
 I also thought the original pars were too high, so I requested lower targets and then gave more specific values. The current pars are:
 
-Hole
+| Hole | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|
+| Par | 2 | 3 | 3 | 3 | 3 | 3 | 4 | 5 | 5 |
 
-1
-
-2
-
-3
-
-4
-
-5
-
-6
-
-7
-
-8
-
-9
-
-Par
-
-2
-
-3
-
-3
-
-3
-
-3
-
-3
-
-4
-
-5
-
-5
+**Total par: 31.**
 
 The total par is now 31. I understand that changing par changes the target score, while changing obstacles changes how the hole actually plays. Lowering a number alone does not make the ball move differently.
 
