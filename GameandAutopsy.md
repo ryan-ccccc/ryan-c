@@ -494,3 +494,11 @@ Those checks used simulated game state. They do not replace playing the updated 
 My next goal is to complete a three-player round and record whether turns, animations, and automatic transitions happen in the correct order. I also want to play holes 8 and 9 three times each and record strokes and water penalties before deciding whether their difficulty needs another adjustment.
 
 If a problem appears, I will write down what I expected, what actually happened, and which action triggered it. Then I will identify the relevant function and change one thing at a time. For example, if the game advances while someone is still playing, I would investigate the completion flags and .every() check before changing the animation.
+
+## Final Reflection
+
+I started this unit wanting to understand how a game’s interface connects to its code. Through Pong, Tag, and mini golf, I learned how input changes stored values, how the game updates movement and collisions, and how it draws the result. I can now explain the main parts, although I still need help with more complicated code.
+
+ChatGPT wrote and revised the code, while I chose features, tried versions, and explained what needed changing. My requests became more specific, from “it doesnt work” to describing changes to aiming, collisions, hazards, and multiplayer turns. I also learned that adding one feature can require changes elsewhere, such as updating collisions and scoring when adding a third player.
+
+I am happy with how the game developed, but I spent more time adding features than making small code changes myself. My next step is to edit one setting independently, predict the result, and test it. I also want to finish a three-player round to check the turns and automatic transitions.
