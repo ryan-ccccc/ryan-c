@@ -360,3 +360,179 @@ ChatGPT generated the initial code and implemented the revisions. I selected the
 
 The project also grew substantially from the first one-hole version. Although I kept aiming and putting as the core mechanic, multiplayer and hazards added more state and interactions. I now need to pause expansion and focus on understanding and verifying the existing game.
 
+### Continuing My Mini-Golf Game: Nine Holes, Score Animations, and Three Players
+
+At the end of my previous entry, I had a seven-hole game with mouse aiming, arrow-key power control, curved obstacles, water hazards, and two-player collisions. My goals included understanding how the main functions connect and testing how different features interact. For this next stage, I focused on extending the course and improving what happens when a player finishes a hole.
+
+I continued using ChatGPT to generate and revise the code. My role was to decide what needed changing, give feedback on the game, and ask for explanations of the implementation. The changes below were coded by ChatGPT.
+
+Adding Two Holes and Revising the Difficulty
+
+I first asked for two more holes, bringing the course to nine. I wanted the later holes to require more planning instead of repeating the earlier layouts.
+
+Hole 8, “Split decision,” has a central lake with routes above and below it. After I asked for more difficulty, the lake became larger, the routes became narrower, and small bumpers were added along both routes. Two short walls near the cup create a gate that requires a more accurate approach.
+
+Hole 9, “The last bend,” has larger staggered ponds, additional bumpers, and a curved wall around the cup. The opening in that curved wall was narrowed so the final shot needs to approach from the upper-right side.
+
+These changes use the existing COURSES array. Each hole stores its dimensions, starting position, cup position, water, and obstacles. The game’s existing movement and drawing functions then use that information. Adding another hole does not require writing another game loop.
+
+I also thought the original pars were too high, so I requested lower targets and then gave more specific values. The current pars are:
+
+Hole
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+7
+
+8
+
+9
+
+Par
+
+2
+
+3
+
+3
+
+3
+
+3
+
+3
+
+4
+
+5
+
+5
+
+The total par is now 31. I understand that changing par changes the target score, while changing obstacles changes how the hole actually plays. Lowering a number alone does not make the ball move differently.
+
+<img width="880" height="700" alt="Screenshot 2026-10-16 at 1 33 49 PM" src="https://github.com/user-attachments/assets/67310d8f-63ef-42d7-a04a-d808fa23305f" />
+
+<img width="887" height="645" alt="Screenshot 2026-10-16 at 1 33 24 PM" src="https://github.com/user-attachments/assets/bd7bca0a-4919-43d7-b7d2-247a493e3444" />
+
+Caption: The new holes use narrower routes and more obstacles to make positioning and power control more important.
+
+Adding Feedback When a Ball Enters the Cup
+
+Next, I asked for animations for birdies, eagles, bogeys, double bogeys, and other results. The animation worked, but it also made the existing “Hole complete” message feel unnecessary.
+
+The score category comes from this calculation:
+
+const difference = strokes - par;
+
+For example, finishing a par 4 hole in three strokes gives -1, which means birdie. Five strokes gives 1, which means bogey. The scoreName() function converts that difference into the correct label.
+
+When the ball enters the cup, the game marks that player as finished and triggers the result:
+
+p.done[holeIndex] = true;
+celebrateScore(p);
+
+Here, p is the player whose ball entered the cup. This matters because another player could bump that ball into the hole. The result needs to belong to the ball’s owner.
+
+The animation helped me understand the different jobs of HTML, CSS, and JavaScript more clearly. HTML provides a container over the canvas. JavaScript creates the result message and decides when to display it. CSS controls how the message grows, moves, and fades.
+
+<img width="483" height="235" alt="Screenshot 2026-10-16 at 1 35 05 PM" src="https://github.com/user-attachments/assets/10941fe8-13fa-4e37-b4ba-51819fc76261" />
+
+Caption: The result animation compares the player’s stroke count with the current hole’s par.
+
+Replacing the Completion Screen with Automatic Progression
+
+Once the animation was working, I asked to remove “Hole complete” and move automatically to the next hole afterward. For multiplayer, I specified that the game should wait until everyone finishes. I also requested that each multiplayer animation last two seconds so the next player can continue.
+
+This required more than deleting the old message. The game needs to check whether it is actually ready to move on.
+
+The new finishCelebrationTransition() function checks these conditions:
+
+if (
+  holeComplete &&
+  !roundComplete &&
+  !shotInProgress &&
+  !celebrationActive &&
+  celebrationQueue.length === 0
+) {
+  advanceHole();
+}
+
+I can read this as: everyone has finished the hole, the round is not over, no shot is still running, and there are no animations left to display. Only then should the next hole load.
+
+The ! symbol means “not,” and && means every condition must be true. This connects directly to my earlier goal of understanding state. The game uses several pieces of state to decide what should happen next.
+
+The game sets holeComplete after checking:
+
+players.every(player => player.done[holeIndex])
+
+The .every() method checks every player. If one player is still unfinished, the result is false and the course stays on the same hole.
+
+The transition also uses the CSS animationend event. This tells JavaScript when the result animation has actually finished. At that point, the game removes the message and checks whether to show another result, let the next player putt, or advance.
+
+The duration is set here:
+
+card.style.setProperty(
+  '--result-duration',
+  players.length > 1 ? '2s' : '3s'
+);
+
+This means multiplayer uses two seconds and solo mode uses three. To adjust the duration later, I can change these values.
+
+If two balls finish during the same shot, their messages go into celebrationQueue. Each message gets its own turn on screen. The next hole waits until the queue is empty, so one player’s result does not replace another player’s result immediately.
+
+<video controls playsinline preload="metadata" style="width: 100%;">
+  <source src="videos/multiplayer-auto-advance.mp4" type="video/mp4">
+  Your browser does not support embedded video.
+</video>
+
+Caption: Finishing one ball triggers a result, while finishing every ball allows the course to advance after the animations.
+
+Extending the Game to Three Players
+
+I also requested three-player mode. Adding an option to the menu was the first part:
+
+<option value="3">3 players · alternate shots</option>
+
+However, the original collision code specifically referred to the first two balls. Adding a third menu option by itself would not have updated that behavior.
+
+The revised collision code collects the balls that are still playing, then checks every pair:
+
+for (let i = 0; i < live.length; i++) {
+  for (let j = i + 1; j < live.length; j++) {
+    collidePair(live[i].ball, live[j].ball);
+  }
+}
+
+With three balls, this checks players 1 and 2, players 1 and 3, and players 2 and 3. Starting j at i + 1 avoids checking a ball against itself or checking the same pair twice.
+
+Each player also needs a separate starting position. The vertical offset uses:
+
+(index - (players.length - 1) / 2) * 30
+
+For three players, this gives offsets of -30, 0, and 30 pixels. The balls start in a row around the tee instead of overlapping.
+
+The winner logic now compares all players’ totals. It can identify player 3 as the winner and handle ties between any of the players.
+
+<img width="883" height="768" alt="Screenshot 2026-10-16 at 1 39 25 PM" src="https://github.com/user-attachments/assets/fdf25675-6511-49ea-a2db-d97ea8b55bec" />
+
+Caption: Three-player mode required separate ball positions, pair-by-pair collisions, and score comparisons across all players.
+
+What Has Been Checked and What I Still Need to Test
+
+I confirmed that the earlier score animation was working. For this latest update, ChatGPT ran automated checks for progression through all nine holes in one-, two-, and three-player modes. The checks also covered animation order, collisions between each pair of balls, restarting during a result, and winner/tie handling.
+
+Those checks used simulated game state. They do not replace playing the updated version in a browser or show whether the new pars are fair.
+
+My next goal is to complete a three-player round and record whether turns, animations, and automatic transitions happen in the correct order. I also want to play holes 8 and 9 three times each and record strokes and water penalties before deciding whether their difficulty needs another adjustment.
+
+If a problem appears, I will write down what I expected, what actually happened, and which action triggered it. Then I will identify the relevant function and change one thing at a time. For example, if the game advances while someone is still playing, I would investigate the completion flags and .every() check before changing the animation.
