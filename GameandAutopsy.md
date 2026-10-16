@@ -349,8 +349,6 @@ I expanded the game to seven holes and requested that hole 7 be the hardest. It 
 
 <img width="885" height="835" alt="Screenshot 2026-10-14 at 7 01 43 PM" src="https://github.com/user-attachments/assets/679eef89-b2bc-49c3-b2cc-cee1b1fdf759" />
 
-*Caption: The final course combines earlier mechanics and uses a smaller target, while still allowing successful shots at any speed.*
-
 
 ### Outcome, AI Use, and Scope
 
@@ -390,7 +388,6 @@ The total par is now 31. I understand that changing par changes the target score
 
 <img width="887" height="645" alt="Screenshot 2026-10-16 at 1 33 24 PM" src="https://github.com/user-attachments/assets/bd7bca0a-4919-43d7-b7d2-247a493e3444" />
 
-Caption: The new holes use narrower routes and more obstacles to make positioning and power control more important.
 
 Adding Feedback When a Ball Enters the Cup
 
@@ -412,8 +409,6 @@ Here, p is the player whose ball entered the cup. This matters because another p
 The animation helped me understand the different jobs of HTML, CSS, and JavaScript more clearly. HTML provides a container over the canvas. JavaScript creates the result message and decides when to display it. CSS controls how the message grows, moves, and fades.
 
 <img width="483" height="235" alt="Screenshot 2026-10-16 at 1 35 05 PM" src="https://github.com/user-attachments/assets/10941fe8-13fa-4e37-b4ba-51819fc76261" />
-
-Caption: The result animation compares the player’s stroke count with the current hole’s par.
 
 Replacing the Completion Screen with Automatic Progression
 
@@ -461,7 +456,6 @@ If two balls finish during the same shot, their messages go into celebrationQueu
   Your browser does not support embedded video.
 </video>
 
-Caption: Finishing one ball triggers a result, while finishing every ball allows the course to advance after the animations.
 
 Extending the Game to Three Players
 
@@ -490,8 +484,6 @@ For three players, this gives offsets of -30, 0, and 30 pixels. The balls start 
 The winner logic now compares all players’ totals. It can identify player 3 as the winner and handle ties between any of the players.
 
 <img width="883" height="768" alt="Screenshot 2026-10-16 at 1 39 25 PM" src="https://github.com/user-attachments/assets/fdf25675-6511-49ea-a2db-d97ea8b55bec" />
-
-Caption: Three-player mode required separate ball positions, pair-by-pair collisions, and score comparisons across all players.
 
 What Has Been Checked and What I Still Need to Test
 
