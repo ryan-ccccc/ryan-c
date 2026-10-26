@@ -296,12 +296,11 @@ This helped me understand that the controller supplies input to the game’s exi
 
 After the revisions, I confirmed that the joystick and button worked with the actual game. I recorded one demonstration of the controller in use.
 
-<video controls playsinline preload="metadata" style="width: 100%;">
+<video controls playsinline preload="metadata"
+       style="width: 100%; max-width: 600px; display: block; margin: 0 auto;">
   <source src="videos/minigolf-joystick-demo.mp4" type="video/mp4">
   Your browser does not support embedded video.
 </video>
-
-<p><em>My working demonstration shows the physical joystick and button controlling the mini-golf game.</em></p>
 
 The current result is the original nine-hole game adapted for a single player using the Arduino controller. The successful physical test provides evidence beyond the simulated checks ChatGPT ran while revising the code.
 
@@ -310,5 +309,3 @@ The current result is the original nine-hole game adapted for a single player us
 ChatGPT revised the Arduino sketch and implemented the Web Serial connection and controller logic. I provided the starting sketch and pin assignments, proposed the control options, reported the problem with the unresponsive game, and tested the updated version. I also chose to remove mouse and keyboard shot controls and simplify the game to one player.
 
 The main thing I learned was that receiving information and using it are separate steps. Changing live readings showed that data was reaching the page, but the game’s conditions still had to allow that data to affect aiming and shooting. Describing that difference helped narrow down the problem.
-
-My next goal is to complete a full nine-hole round using only the controller and record any missed presses, aiming drift, or unexpected changes between AIM and POWER. I also want to make one small change myself, such as adjusting the dead-zone value, predict what it will do, and compare the result before keeping it.
