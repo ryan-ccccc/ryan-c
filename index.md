@@ -25,3 +25,5 @@ I want to keep learning new skills, improve at designing and creating things, an
 [View my 3D Scanner Project with John](3DScannerProject.md)
 
 [Arcade Unit: Game and Code Autopsy](GameandAutopsy.md)
+
+[Combining Joystick and Minigolf](JoysticktoMinigolf.md)
