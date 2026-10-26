@@ -51,10 +51,10 @@ The code used these connections:
 
 The joystick button uses `INPUT_PULLUP`, so LOW means pressed. The separate button uses the original HIGH-means-pressed arrangement. That input needs a pull-down resistor to keep it LOW when the button is released instead of leaving the reading unstable.
 
-<img width="960" height="768" alt="4a4121cb61985a3d8f5cfccd81dd7281" src="https://github.com/user-attachments/assets/bfaead4f-a3bb-4814-93bc-4b68724d9200" />
+<img width="480" height="384" alt="4a4121cb61985a3d8f5cfccd81dd7281" src="https://github.com/user-attachments/assets/bfaead4f-a3bb-4814-93bc-4b68724d9200" />
 
 
-<img width="1279" height="1706" alt="c0cdd63692e6629682a39713204a9781" src="https://github.com/user-attachments/assets/de29c708-cea7-40a9-93b5-d241bddc2c68" />
+<img width="426" height="569" alt="c0cdd63692e6629682a39713204a9781" src="https://github.com/user-attachments/assets/de29c708-cea7-40a9-93b5-d241bddc2c68" />
 
 
 ### Testing the Inputs Before Connecting the Game
