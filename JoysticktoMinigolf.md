@@ -276,6 +276,10 @@ The button-release requirement no longer blocks ordinary aiming. The game still 
 
 I requested that mouse and keyboard shot controls be removed and that the game become single-player only. This made the controller test clearer. The joystick and separate button now handle every shot, while the mouse is used for connection, calibration, and round setup.
 
+The changing readings helped narrow down the problem. They showed that input data was reaching the browser, so the USB connection was not completely failing. The next step was to investigate how the game used those readings. I reported that the displayed values changed while the aiming arrow and shot controls did not respond, which gave ChatGPT specific behavior to investigate.
+
+ChatGPT identified calibration and button-release conditions that could block the controls and revised them. I then tested the updated game with the physical joystick and button and recorded the working result. Because several changes were made together, I cannot say which condition caused the original failure. If I troubleshoot this again, I would change and test one condition at a time to identify the cause more precisely.
+
 ### Understanding How Movement Reaches the Game
 
 I can now follow the connection through the main parts of the program:
