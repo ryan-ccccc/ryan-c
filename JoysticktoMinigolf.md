@@ -296,11 +296,13 @@ This helped me understand that the controller supplies input to the game’s exi
 
 After the revisions, I confirmed that the joystick and button worked with the actual game. I recorded one demonstration of the controller in use.
 
-<video controls playsinline preload="metadata"
-       style="width: 100%; max-width: 600px; display: block; margin: 0 auto;">
-  <source src="videos/minigolf-joystick-demo.mp4" type="video/mp4">
-  Your browser does not support embedded video.
-</video>
+<div style="width: 100%; max-width: 600px; aspect-ratio: 1; margin: 0 auto; display: grid; place-items: center;">
+  <video controls playsinline preload="metadata"
+         style="width: 100%; max-height: 100%; transform: rotate(-90deg);">
+    <source src="videos/minigolf-joystick-demo.mp4" type="video/mp4">
+    Your browser does not support embedded video.
+  </video>
+</div>
 
 The current result is the original nine-hole game adapted for a single player using the Arduino controller. The successful physical test provides evidence beyond the simulated checks ChatGPT ran while revising the code.
 
