@@ -23,4 +23,4 @@ body {
 }
 </style>
 
-[Play my mini-golf game that needs to be connected to a joystick to play](mini.html)
+[Play my mini-golf game that needs to be connected to a joystick to play](mini.html) 
