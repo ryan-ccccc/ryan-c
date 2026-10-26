@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Little Links • Nine-Hole Mini Golf</title>
+<style>
+/* CSS: page layout and controls. JavaScript draws the course. */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 24px 16px; background: #f3f1e8; color: #183d32; font-family: system-ui, sans-serif; }
+main { max-width: 1100px; margin: auto; }
+header, .toolbar, .panel { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+header { justify-content: space-between; margin-bottom: 14px; }
+.eyebrow { font-size: 11px; font-weight: 750; letter-spacing: 3px; text-transform: uppercase; }
+h1 { font-family: Georgia, serif; font-size: clamp(30px, 5vw, 46px); font-weight: 500; margin: 4px 0; }
+.badge { border: 1px solid #b9c8bb; border-radius: 24px; padding: 10px 16px; font-size: 13px; }
+.toolbar { justify-content: space-between; margin: 12px 0; }
+select, button { border: 1px solid #c0cdbf; border-radius: 8px; padding: 11px 16px; font: 650 14px system-ui; cursor: pointer; background: #e5e9de; color: #214c3f; }
+button.primary { background: #214c3f; color: white; border-color: #214c3f; }
+button:disabled { opacity: .45; cursor: default; }
+button:focus-visible, canvas:focus-visible, select:focus-visible { outline: 3px solid #d39741; outline-offset: 3px; }
+#players { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+.player { flex: 1; border: 2px solid transparent; border-radius: 9px; background: #e5e9de; padding: 12px 16px; font-size: 14px; }
+.player.active { border-color: #285c43; background: #fffdf4; }
+.player strong { display: block; margin-bottom: 4px; }
+.course { position: relative; padding: 7px; background: #214c3f; border-radius: 16px; box-shadow: 0 12px 30px #173e3220; }
+/* A separate HTML overlay lets CSS animate results without changing ball physics. */
+#scoreCelebration { position: absolute; inset: 8% 12px auto; z-index: 2; display: flex; justify-content: center; pointer-events: none; }
+.score-toast { position: relative; overflow: hidden; text-align: center; padding: 18px 30px; border: 2px solid #f4df9b; border-radius: 18px; color: #fff8df; background: #173f35f5; box-shadow: 0 12px 35px #102b3360; animation: scoreToast var(--result-duration, 3s) both; }
+.score-toast.under { background: #254681f5; }
+.score-toast.over { background: #694733f5; border-color: #e9c7ac; }
+.score-toast strong { position: relative; display: block; font: 800 clamp(24px, 4vw, 44px) system-ui; letter-spacing: 1px; }
+.score-toast small { position: relative; display: block; margin-top: 5px; font-size: 14px; }
+.score-toast.under::before { content: '✦  ✧  ✦  ✧  ✦'; position: absolute; inset: 0; color: #ffe19d; font-size: 34px; opacity: .5; animation: scoreSparkles var(--result-duration, 3s) both; }
+@keyframes scoreToast { 0% { opacity: 0; transform: translateY(24px) scale(.7); } 14% { opacity: 1; transform: translateY(0) scale(1.06); } 23%, 80% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: translateY(-18px) scale(.96); } }
+@keyframes scoreSparkles { from { transform: translateY(35px) scale(.5) rotate(-12deg); } to { transform: translateY(-25px) scale(1.5) rotate(12deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .score-toast { animation-name: scoreFade; } .score-toast.under::before { animation: none; } }
+@keyframes scoreFade { 0%, 100% { opacity: 0; } 10%, 90% { opacity: 1; } }
+canvas { display: block; width: 100%; height: auto; border-radius: 10px; touch-action: none; cursor: crosshair; }
+.panel { padding: 16px 2px; }
+.power { flex: 1; min-width: 180px; }
+.power label { display: flex; justify-content: space-between; font-size: 12px; font-weight: 750; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 7px; }
+input { width: 100%; accent-color: #285c43; cursor: pointer; }
+#status { margin: 0 0 7px; min-height: 24px; font-weight: 650; }
+.help { font-size: 13px; color: #52685d; line-height: 1.7; margin: 0; }
+.controller { margin: 14px 0; padding: 14px 16px; background: #e5e9de; border: 1px solid #b9c8bb; border-radius: 12px; }
+.controller-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 8px; }
+.controller label { font-size: 13px; }
+.controller input[type=checkbox] { width: auto; }
+#controllerStatus { margin: 5px 0; font-size: 14px; }
+#controllerReadings { display: block; font-size: 12px; color: #52685d; }
+kbd { border: 1px solid #b9c8bb; border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px; font: inherit; }
+.scorecard { overflow-x: auto; margin-top: 22px; }
+table { width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; }
+caption { text-align: left; font-weight: 700; margin-bottom: 10px; }
+th, td { padding: 10px; border-bottom: 1px solid #d4dccf; }
+th:first-child { text-align: left; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+<header><div><div class="eyebrow">Nine holes · One shared screen</div><h1>Little Links</h1></div><div class="badge" id="holeBadge"></div></header>
+<div class="toolbar"><label>Players <select id="mode"><option value="1">1 player</option><option value="2">2 players · alternate shots</option><option value="3">3 players · alternate shots</option></select></label><span id="courseName"></span><button id="restart">Restart round</button></div>
+<div id="players"></div>
+<div class="controller">
+  <div class="controller-controls"><strong>Arduino controller</strong>
+    <button id="connectArduino" type="button">Connect Arduino</button>
+    <button id="calibrateArduino" type="button" disabled>Calibrate center</button>
+    <label><input id="invertJoystickX" type="checkbox"> Reverse left/right</label>
+    <label><input id="invertJoystickY" type="checkbox"> Reverse up/down</label>
+  </div>
+  <p id="controllerStatus" role="status" aria-live="polite">Not connected. Mouse and keyboard are ready.</p>
+  <output id="controllerReadings">X: — · Y: — · Joystick button: — · Putt button: —</output>
+  <p class="help"><b>1. Aim</b> with the joystick, then press the separate button to lock your direction. <b>2. Power:</b> release the stick and buttons, then tilt up to increase power or down to decrease it. Return to center to keep that power. <b>3. Putt:</b> press the separate button again. Click the joystick to cancel the lock and aim again. Release the stick and both buttons between turns. Share one controller in multiplayer.</p>
+</div>
+<!-- Each course has larger internal dimensions. CSS fits it to your screen. -->
+<div class="course"><canvas id="course" width="900" height="520" tabindex="0" aria-label="Mini golf. Aim with the mouse, use Up and Down arrows for power, and press Space to putt.">Your browser needs canvas support.</canvas><div id="scoreCelebration" role="status" aria-live="polite" aria-atomic="true"></div></div>
+<div class="panel">
+<div class="power"><label for="power">Shot power <span id="powerValue">45%</span></label><input id="power" type="range" min="5" max="100" value="45"></div>
+<button id="putt" class="primary">Putt · Space</button><button id="next" class="primary" hidden>Play again ↻</button>
+</div>
+<p id="status" role="status" aria-live="polite"></p>
+<p class="help"><b>Mouse to aim. <kbd>Space</kbd> to putt.</b> Use <kbd>↑</kbd>/<kbd>↓</kbd> to change power by 5%, or use the slider. The aim line follows your mouse immediately.<br>In two- or three-player mode, take turns on this device. Each player has their own ball. Balls can knock each other off line. Wait for all balls to stop. Score animations last two seconds in multiplayer, then the next player can putt. Once everyone finishes and the animations end, the next hole loads automatically. Lowest total wins. Changing player mode starts a new round.<br><b>Get the ball’s center inside the smaller cup to finish. Any speed counts.</b> Only blue ponds are hazards. Wooden rails and outer walls bounce the ball back. Enter water and return to this hole’s tee with one penalty stroke.</p>
+<div class="scorecard"><table><caption>Round scorecard</caption><thead><tr><th>Player</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>Total</th></tr></thead><tbody id="scores"></tbody></table></div>
+</main>
+<script>
+'use strict';
+// 1. COURSE DATA: Every hole has a different shape and route.
+// Water is limited to marked ponds. All courses have solid outer walls.
+// Some pond edges have protective rails. Angles for curved barriers use radians.
+const COURSES = [
+  { name:'Round the mound',w:900,h:520,par:2,start:{x:130,y:380},cup:{x:750,y:140},
+    tip:'One round bumper. Aim around it or bank off a wall.',
+    obstacles:[{type:'circle',x:445,y:260,r:55}] },
+  { name:'Crescent bend',w:1000,h:580,par:3,start:{x:130,y:430},cup:{x:860,y:145},
+    tip:'The curved wall changes the bounce angle. Find a route around its ends.',
+    obstacles:[{type:'arc',x:510,y:290,r:145,a:-1.3,b:1.3,thickness:26},{type:'circle',x:785,y:425,r:48}] },
+  { name:'Pond crossing',w:1100,h:640,par:3,start:{x:140,y:160},cup:{x:955,y:160},
+    tip:'Two small ponds with a wide grass crossing. One short rail offers a bank shot; most pond edges are open.',
+    water:[{x:370,y:80,w:340,h:170},{x:370,y:400,w:340,h:160}],
+    obstacles:[{x:410,y:250,w:160,h:18},{type:'circle',x:900,y:420,r:52}] },
+  { name:'Curved garden',w:1200,h:700,par:3,start:{x:130,y:350},cup:{x:1080,y:350},
+    tip:'Two facing crescents and round bumpers. Plan your bank shots.',
+    obstacles:[{type:'arc',x:420,y:350,r:155,a:-1.45,b:1.45,thickness:28},
+      {type:'arc',x:790,y:350,r:155,a:1.7,b:4.58,thickness:28},
+      {type:'circle',x:610,y:135,r:48},{type:'circle',x:610,y:565,r:48}] },
+  { name:'Lakeside run',w:1300,h:760,par:3,start:{x:140,y:150},cup:{x:1210,y:635},
+    tip:'Three marked ponds and mostly open banks. Choose power carefully.',
+    water:[{type:'circle',x:420,y:260,r:110},{x:680,y:390,w:240,h:210},{type:'circle',x:1070,y:190,r:75}],
+    obstacles:[{type:'arc',x:420,y:260,r:134,a:0.8,b:1.6,thickness:20},
+      {x:740,y:370,w:110,h:20},{type:'circle',x:1030,y:540,r:46},
+      {type:'arc',x:820,y:170,r:100,a:2.9,b:5.4,thickness:24}] },
+  { name:'Lagoon slalom',w:1400,h:800,par:3,start:{x:130,y:660},cup:{x:1270,y:130},
+    tip:'Thread the lagoons and the central crescent. Open water banks reward controlled shots.',
+    water:[{type:'circle',x:435,y:555,r:110},{type:'circle',x:1000,y:285,r:115},{x:490,y:70,w:260,h:150}],
+    obstacles:[{type:'arc',x:715,y:425,r:145,a:-1.2,b:1.3,thickness:25},
+      {type:'circle',x:1020,y:645,r:52},{x:280,y:230,w:180,h:24}] },
+  { name:'Crescent challenge',w:1500,h:860,par:4,start:{x:130,y:730},cup:{x:1360,y:130,r:12},
+    tip:'Open ponds and a tiny cup inside a crescent. Approach the final pocket from above-right.',
+    water:[{x:300,y:230,w:220,h:390},{x:700,y:70,w:190,h:290},{type:'circle',x:1110,y:550,r:130}],
+    obstacles:[{type:'arc',x:625,y:540,r:135,a:0.3,b:2.9,thickness:25},
+      {type:'arc',x:1320,y:180,r:90,a:0,b:4,thickness:22},
+      {type:'circle',x:560,y:170,r:48},{type:'circle',x:920,y:725,r:48},
+      {x:960,y:100,w:24,h:180}] },
+  { name:'Split decision',w:1600,h:900,par:5,start:{x:150,y:450},cup:{x:1450,y:450,r:12},
+    tip:'Choose a narrow upper or lower route around the lake. Ease past the small bumpers, then line up with the final gate.',
+    water:[{x:610,y:125,w:400,h:650},{type:'circle',x:1190,y:710,r:85}],
+    obstacles:[{type:'arc',x:430,y:450,r:125,a:-1.25,b:1.25,thickness:25},
+      {type:'arc',x:1230,y:440,r:125,a:1.7,b:4.55,thickness:25},
+      {type:'circle',x:1080,y:160,r:48},{type:'circle',x:480,y:735,r:45},
+      {type:'circle',x:760,y:70,r:20},{type:'circle',x:900,y:835,r:22},
+      {x:1380,y:280,w:22,h:130},{x:1380,y:490,w:22,h:130}] },
+  { name:'The last bend',w:1700,h:960,par:5,start:{x:140,y:800},cup:{x:1530,y:150,r:12},
+    tip:'Larger staggered ponds and extra bumpers demand careful stopping positions. Enter the narrower cup pocket from above-right.',
+    water:[{type:'circle',x:500,y:700,r:145},{x:820,y:170,w:200,h:480},
+      {type:'circle',x:1280,y:660,r:165},{x:270,y:110,w:220,h:160}],
+    obstacles:[{type:'arc',x:590,y:340,r:155,a:0.3,b:2.8,thickness:25},
+      {type:'arc',x:1490,y:200,r:100,a:0,b:4.85,thickness:22},
+      {type:'circle',x:700,y:820,r:48},{x:1120,y:110,w:24,h:200},
+      {type:'circle',x:880,y:790,r:60},{type:'circle',x:1370,y:340,r:50}] }
+];
+const canvas = document.getElementById('course');
+const ctx = canvas.getContext('2d');
+const powerInput = document.getElementById('power');
+const modeInput = document.getElementById('mode');
+const puttButton = document.getElementById('putt');
+const nextButton = document.getElementById('next');
+const statusText = document.getElementById('status');
+const WALL = 28, BALL_RADIUS = 10, CUP_RADIUS = 14;
+const MAX_SPEED = 620, FRICTION = 180, BOUNCE = 0.78;
+// More energetic impacts, with damping and a speed cap to avoid wild launches.
+const BALL_RESTITUTION = 0.5, IMPACT_DAMPING = 0.8, MAX_BUMP_SPEED = 240;
+const STEP = 1 / 120;
+const COLORS = ['#fff9e9', '#ffc263', '#8bd9ff'];
+const PLAYER_ICONS = ['⚪', '🟠', '🔵'];
+
+// 2. STATE: Each player owns a ball, one stroke count and completion flag per hole.
+let players = [], holeIndex = 0, activePlayer = 0;
+let course, aimAngle = 0, shotInProgress = false, holeComplete = false, roundComplete = false;
+let pointer = null, accumulator = 0, previousTime = null, shotNotes = [];
+// Result messages queue separately so two players can finish in the same shot.
+const celebrationLayer = document.getElementById('scoreCelebration');
+let celebrationQueue = [], celebrationActive = false, celebrationGeneration = 0;
+function scoreName(strokes, par) {
+  const difference = strokes - par;
+  const names = {'-4':'Condor', '-3':'Albatross', '-2':'Eagle', '-1':'Birdie',
+    '0':'Par', '1':'Bogey', '2':'Double bogey', '3':'Triple bogey', '4':'Quadruple bogey'};
+  return names[difference] || Math.abs(difference) + (difference < 0 ? ' under par' : ' over par');
+}
+function celebrateScore(player) {
+  const strokes = player.scores[holeIndex], par = course.par;
+  const result = scoreName(strokes, par);
+  celebrationQueue.push({title: strokes === 1 ? 'Hole in one!' : result,
+    detail: player.name + ' · ' + strokes + (strokes === 1 ? ' stroke' : ' strokes') +
+      ' · Par ' + par + (strokes === 1 ? ' · ' + result : ''),
+    tone: strokes < par ? 'under' : strokes > par ? 'over' : 'even'});
+  showNextCelebration();
+}
+function showNextCelebration() {
+  if (celebrationActive || !celebrationQueue.length) return;
+  celebrationActive = true;
+  const result = celebrationQueue.shift();
+  const card = document.createElement('div');
+  card.className = 'score-toast ' + result.tone;
+  // Solo gets three seconds; multiplayer results take two seconds each.
+  card.style.setProperty('--result-duration', players.length > 1 ? '2s' : '3s');
+  const generation = celebrationGeneration;
+  const title = document.createElement('strong'), detail = document.createElement('small');
+  title.textContent = result.title; detail.textContent = result.detail;
+  card.append(title, detail); celebrationLayer.append(card);
+  card.addEventListener('animationend', event => {
+    if (generation !== celebrationGeneration || event.target !== card || !['scoreToast', 'scoreFade'].includes(event.animationName)) return;
+    card.remove(); celebrationActive = false; showNextCelebration();
+    finishCelebrationTransition();
+  });
+}
+function clearCelebrations() {
+  celebrationGeneration++;
+  celebrationQueue = []; celebrationActive = false; celebrationLayer.replaceChildren();
+}
+function finishCelebrationTransition() {
+  // Wait for every player, all moving balls, and every queued result.
+  if (holeComplete && !roundComplete && !shotInProgress &&
+      !celebrationActive && celebrationQueue.length === 0) {
+    advanceHole();
+  } else refreshUI();
+}
+function currentPlayer() { return players[activePlayer]; }
+function total(player) { return player.scores.reduce((sum, value) => sum + value, 0); }
+function announceTurn(prefix = '') {
+  statusText.textContent = prefix + currentPlayer().name + ': aim with the mouse or controller, then putt.';
+}
+function refreshUI() {
+  document.getElementById('holeBadge').textContent = 'Hole ' + (holeIndex + 1) + ' / ' + COURSES.length + ' · Par ' + course.par;
+  document.getElementById('courseName').textContent = course.name;
+  document.getElementById('powerValue').textContent = powerInput.value + '%';
+  puttButton.disabled = shotInProgress || holeComplete || celebrationActive;
+  powerInput.disabled = shotInProgress || holeComplete;
+  modeInput.disabled = shotInProgress;
+  nextButton.hidden = !roundComplete || celebrationActive || celebrationQueue.length > 0;
+  nextButton.textContent = 'Play again ↻';
+  document.getElementById('players').innerHTML = players.map((p, i) =>
+    '<div class="player ' + (i === activePlayer && !holeComplete ? 'active' : '') + '"><strong>' +
+    PLAYER_ICONS[i] + ' ' + p.name + (p.done[holeIndex] ? ' · Holed' : i === activePlayer && !holeComplete ? (celebrationActive ? ' · Up next' : ' · Your turn') : ' · Waiting') +
+    '</strong>This hole: ' + p.scores[holeIndex] + ' · Total: ' + total(p) + '</div>').join('');
+  document.getElementById('scores').innerHTML = players.map(p => '<tr><th>' + p.name + '</th>' + p.scores.map((n, i) =>
+    '<td>' + (i > holeIndex ? '—' : n + (p.done[i] ? '' : '*')) + '</td>').join('') + '<td><b>' + total(p) + '</b></td></tr>').join('') +
+    '<tr><th>Par</th>' + COURSES.map(c => '<td>' + c.par + '</td>').join('') + '<td>' + COURSES.reduce((s,c) => s+c.par,0) + '</td></tr>';
+}
+function startRound() {
+  players = Array.from({length:Number(modeInput.value)}, (_,i) => ({name:'Player ' + (i+1),scores:Array(COURSES.length).fill(0),done:Array(COURSES.length).fill(false),ball:null}));
+  holeIndex = 0;
+  roundComplete = false;
+  loadHole();
+}
+function makeTeeBall(index) {
+  // Center the group on the tee with 30 pixels between balls.
+  return {x:course.start.x,y:course.start.y+(index-(players.length-1)/2)*30,vx:0,vy:0,r:BALL_RADIUS,fallTime:0};
+}
+function resetToTee(index) {
+  let fresh=makeTeeBall(index);
+  // A stationary opponent may have rolled onto the tee. Find a free nearby spot.
+  for(let attempt=0;attempt<6;attempt++){
+    if(!players.some((p,i)=>i!==index&&!p.done[holeIndex]&&Math.hypot(p.ball.x-fresh.x,p.ball.y-fresh.y)<2*BALL_RADIUS+3))break;
+    fresh.x+=25;
+  }
+  players[index].ball=fresh;
+}
+function loadHole() {
+  clearCelebrations();
+  resetControllerTurn();
+  course = COURSES[holeIndex];
+  canvas.width = course.w; canvas.height = course.h;
+  // Rotate who tees off each hole for any supported player count.
+  activePlayer = holeIndex % players.length;
+  players.forEach((p,i)=>{p.ball=makeTeeBall(i);});
+  shotNotes=[];
+  shotInProgress = false; holeComplete = false;
+  pointer = null; accumulator = 0; previousTime = null;
+  powerInput.value = 45;
+  aimAngle = Math.atan2(course.cup.y-course.start.y,course.cup.x-course.start.x);
+  announceTurn(course.tip + ' ');
+  refreshUI();
+}
+function advanceHole() {
+  if (!holeComplete) return;
+  if (roundComplete) { startRound(); return; }
+  holeIndex++; loadHole();
+}
+
+// 3. INPUT: Direct mouse aiming, no slow keyboard rotation.
+function updateAim() {
+  if (!pointer || shotInProgress || holeComplete) return;
+  if (serialSession && controller.calibrated && controller.mode==='POWER') return;
+  const rect = canvas.getBoundingClientRect();
+  const x = (pointer.x-rect.left)*canvas.width/rect.width;
+  const y = (pointer.y-rect.top)*canvas.height/rect.height;
+  const b = currentPlayer().ball;
+  if (Math.hypot(x-b.x,y-b.y)>1) aimAngle = Math.atan2(y-b.y,x-b.x);
+}
+function aimAt(event) {
+  pointer = {x:event.clientX,y:event.clientY};
+  updateAim();
+}
+canvas.addEventListener('pointermove',aimAt);
+canvas.addEventListener('pointerdown',event=>{aimAt(event);canvas.focus();});
+powerInput.addEventListener('input',refreshUI);
+puttButton.addEventListener('click',shoot);
+nextButton.addEventListener('click',advanceHole);
+document.getElementById('restart').addEventListener('click',startRound);
+modeInput.addEventListener('change',()=>{startRound();canvas.focus();});
+// Capture Space even after using the slider or clicking a button.
+// Prevent its default button click so it cannot also restart or advance a hole.
+document.addEventListener('keydown',event=>{
+  if (event.target.tagName==='SELECT') return;
+  if (event.key==='ArrowUp'||event.key==='ArrowDown') {
+    event.preventDefault(); // prevents page scrolling and duplicate slider steps
+    if (!shotInProgress&&!holeComplete) {
+      const change=event.key==='ArrowUp'?5:-5;
+      powerInput.value=Math.max(5,Math.min(100,Number(powerInput.value)+change));
+      refreshUI();
+    }
+    return;
+  }
+  if (event.code!=='Space' && event.key!==' ') return;
+  event.preventDefault();
+  if (!event.repeat) shoot();
+});
+document.addEventListener('keyup',event=>{
+  if ((event.code==='Space'||event.key===' ') && event.target.tagName!=='SELECT') event.preventDefault();
+});
+function shoot() {
+  if (shotInProgress || holeComplete || celebrationActive) return;
+  updateAim();
+  const b = currentPlayer().ball;
+  const speed = Number(powerInput.value)/100*MAX_SPEED;
+  b.vx = Math.cos(aimAngle)*speed; b.vy = Math.sin(aimAngle)*speed;
+  currentPlayer().scores[holeIndex]++;
+  shotInProgress = true;
+  shotNotes = [];
+  statusText.textContent = currentPlayer().name + ' is putting…';
+  refreshUI();
+}
+
+// 3b. ARDUINO INPUT: Newline-delimited GOLF,x,y,joystickPressed,puttPressed.
+// The board sends readings; all golf rules stay in this browser file.
+const connectArduino = document.getElementById('connectArduino');
+const calibrateArduino = document.getElementById('calibrateArduino');
+const controllerStatus = document.getElementById('controllerStatus');
+const controllerReadings = document.getElementById('controllerReadings');
+const invertJoystickX = document.getElementById('invertJoystickX');
+const invertJoystickY = document.getElementById('invertJoystickY');
+let serialSession = null, serialBusy = false;
+const controller = {
+  x:512, y:512, centerX:512, centerY:512, joystick:0, putt:0,
+  lastPacket:0, hasPacket:false, calibrated:false, samples:null,
+  mode:'AIM', needNeutral:true, power:45, lockedAngle:0
+};
+const JOYSTICK_DEAD_ZONE = 85, SERIAL_TIMEOUT = 700;
+function resetControllerTurn() {
+  controller.mode = 'AIM'; controller.needNeutral = true;
+}
+function controllerBlocked() {
+  return document.hidden || shotInProgress || holeComplete || celebrationActive;
+}
+function joystickVector() {
+  return {x:(controller.x-controller.centerX)*(invertJoystickX.checked?-1:1),
+    y:(controller.y-controller.centerY)*(invertJoystickY.checked?-1:1)};
+}
+function controllerIsFresh() {
+  return controller.hasPacket && performance.now()-controller.lastPacket <= SERIAL_TIMEOUT;
+}
+function updateControllerStatus() {
+  calibrateArduino.disabled = !serialSession || !controllerIsFresh() || !!controller.samples;
+  if (!serialSession) return;
+  if (!controllerIsFresh()) {
+    controllerStatus.textContent = 'Waiting for controller readings. Upload MiniGolfController.ino and check the USB cable.';
+  } else if (controller.samples) {
+    controllerStatus.textContent = 'Calibrating: leave the joystick centered and both buttons released…';
+  } else if (!controller.calibrated) {
+    controllerStatus.textContent = 'Connected. Release the joystick and both buttons, then click Calibrate center.';
+  } else {
+    controllerStatus.textContent = 'Connected · '+(controller.mode==='AIM'?'1. AIM':'2. POWER (direction locked)')+' · '+
+      (controller.needNeutral ? 'Release the joystick and both buttons to get ready.' :
+       controller.mode==='AIM' ? 'Tilt toward your target. Press the separate button to lock direction.' : 'Tilt up/down for power. Press the separate button to putt, or click the joystick to aim again.');
+  }
+}
+function beginCalibration() {
+  if (!controllerIsFresh() || !serialSession) return;
+  controller.samples = []; controller.calibrated = false; controller.needNeutral = true;
+  resetControllerTurn();
+  updateControllerStatus();
+}
+function receiveControllerLine(line) {
+  const match = /^GOLF,(\d{1,4}),(\d{1,4}),([01]),([01])$/.exec(line.trim());
+  if (!match) return; // Ignore startup messages, incomplete frames and wrong sketches.
+  const x=Number(match[1]), y=Number(match[2]), joystick=Number(match[3]), putt=Number(match[4]);
+  if (x>1023 || y>1023) return;
+  const fresh = controllerIsFresh();
+  const joystickEdge = fresh && joystick===1 && controller.joystick===0;
+  const puttEdge = fresh && putt===1 && controller.putt===0;
+  if (!fresh) controller.needNeutral = true;
+  Object.assign(controller,{x,y,joystick,putt,lastPacket:performance.now(),hasPacket:true});
+  controllerReadings.textContent = 'X: '+x+' · Y: '+y+' · Joystick button: '+(joystick?'PRESSED':'released')+' · Putt button: '+(putt?'PRESSED':'released');
+  if (controller.samples) {
+    if (joystick || putt || x<200 || x>823 || y<200 || y>823) controller.samples=[];
+    else {
+      controller.samples.push({x,y});
+      if (controller.samples.length===20) {
+        const xs=controller.samples.map(p=>p.x), ys=controller.samples.map(p=>p.y);
+        if (Math.max(...xs)-Math.min(...xs)>40 || Math.max(...ys)-Math.min(...ys)>40) controller.samples=[];
+        else {
+          controller.centerX=xs.reduce((a,b)=>a+b,0)/20;
+          controller.centerY=ys.reduce((a,b)=>a+b,0)/20;
+          controller.calibrated=true; controller.samples=null; resetControllerTurn();
+        }
+      }
+    }
+    updateControllerStatus(); return;
+  }
+  if (!controller.calibrated || controllerBlocked()) { controller.needNeutral=true; updateControllerStatus(); return; }
+  const v=joystickVector();
+  if (controller.needNeutral) {
+    if (Math.hypot(v.x,v.y)<=JOYSTICK_DEAD_ZONE && !joystick && !putt) controller.needNeutral=false;
+    updateControllerStatus(); return;
+  }
+  if (joystickEdge) {
+    // Joystick click cancels the power step; it never fires a shot.
+    pointer=null; resetControllerTurn();
+    updateControllerStatus(); return;
+  }
+  applyController(0); // Use the latest aim before handling this packet's putt.
+  if (puttEdge) {
+    if (controller.mode==='AIM') {
+      // First separate-button press locks direction without counting a stroke.
+      controller.lockedAngle=aimAngle; pointer=null;
+      controller.mode='POWER'; controller.power=Number(powerInput.value);
+      // Require a neutral release so the aiming tilt cannot also alter power.
+      controller.needNeutral=true;
+    } else {
+      // Second press confirms power and calls the original golf shot function.
+      aimAngle=controller.lockedAngle; pointer=null; shoot();
+    }
+  }
+  updateControllerStatus();
+}
+function consumeSerialText(session, text) {
+  session.buffer += text;
+  let newline;
+  while ((newline=session.buffer.indexOf('\n'))!==-1) {
+    const line=session.buffer.slice(0,newline); session.buffer=session.buffer.slice(newline+1);
+    if (line.length<=80) receiveControllerLine(line);
+  }
+  if (session.buffer.length>256) session.buffer='';
+}
+function applyController(dt) {
+  if (!serialSession || !controller.calibrated || !controllerIsFresh()) {
+    controller.needNeutral=true; return;
+  }
+  if (controllerBlocked()) { controller.needNeutral=true; return; }
+  if (controller.mode==='POWER') aimAngle=controller.lockedAngle;
+  if (controller.needNeutral) return;
+  const v=joystickVector();
+  if (controller.mode==='AIM' && Math.hypot(v.x,v.y)>JOYSTICK_DEAD_ZONE) {
+    pointer=null; // Prevent the old mouse position from overwriting joystick aim.
+    aimAngle=Math.atan2(v.y,v.x);
+  } else if (controller.mode==='POWER' && Math.abs(v.y)>JOYSTICK_DEAD_ZONE) {
+    const strength=Math.min(1,(Math.abs(v.y)-JOYSTICK_DEAD_ZONE)/(512-JOYSTICK_DEAD_ZONE));
+    controller.power=Math.max(5,Math.min(100,controller.power-Math.sign(v.y)*strength*40*dt));
+    const value=Math.round(controller.power);
+    if (value!==Number(powerInput.value)) { powerInput.value=value; refreshUI(); }
+  } else controller.power=Number(powerInput.value);
+}
+async function readArduino(session) {
+  const decoder=new TextDecoder();
+  let message='Controller disconnected. Mouse and keyboard are ready.';
+  try {
+    session.reader=session.port.readable.getReader();
+    while (!session.stop) {
+      const {value,done}=await session.reader.read();
+      if (done) break;
+      if (value && !session.stop) consumeSerialText(session,decoder.decode(value,{stream:true}));
+    }
+  } catch (error) {
+    if (!session.stop) message='Controller connection lost. Check the USB cable, then connect again.';
+  } finally {
+    session.reader?.releaseLock(); session.reader=null;
+    try { await session.port.close(); } catch (_) { /* Already unplugged. */ }
+    if (serialSession===session) {
+      serialSession=null; serialBusy=false;
+      controller.hasPacket=false; controller.calibrated=false; controller.samples=null; resetControllerTurn();
+      connectArduino.textContent='Connect Arduino'; connectArduino.disabled=false;
+      calibrateArduino.disabled=true; controllerStatus.textContent=message;
+    }
+  }
+}
+async function disconnectArduino() {
+  const session=serialSession;
+  if (!session || serialBusy) return;
+  serialBusy=true; connectArduino.disabled=true; session.stop=true; controller.needNeutral=true;
+  try { await session.reader?.cancel(); } catch (_) { /* Unplug may already have ended reading. */ }
+  await session.task;
+}
+connectArduino.addEventListener('click',async()=>{
+  if (serialBusy) return;
+  if (serialSession) { await disconnectArduino(); return; }
+  serialBusy=true; connectArduino.disabled=true;
+  let port;
+  try {
+    port=await navigator.serial.requestPort();
+    await port.open({baudRate:9600});
+    serialSession={port,reader:null,task:null,stop:false,buffer:''};
+    controller.hasPacket=false; controller.calibrated=false; controller.samples=null; resetControllerTurn();
+    connectArduino.textContent='Disconnect Arduino';
+    controllerStatus.textContent='Connected. Waiting for the Arduino to start…';
+    serialSession.task=readArduino(serialSession);
+  } catch (error) {
+    controllerStatus.textContent=error.name==='NotFoundError' ? 'No port selected. Click Connect Arduino to try again.' :
+      'Could not open the port. Close Serial Monitor, Serial Plotter and other connected tabs, then try again.';
+  } finally { serialBusy=false; connectArduino.disabled=false; }
+});
+calibrateArduino.addEventListener('click',beginCalibration);
+for (const input of [invertJoystickX,invertJoystickY]) input.addEventListener('change',resetControllerTurn);
+if (!window.isSecureContext || !('serial' in navigator)) {
+  connectArduino.disabled=true;
+  controllerStatus.textContent='Arduino connection needs a browser with Web Serial support. Open the HTTPS GitHub Pages game in desktop Chrome or Edge. Mouse and keyboard still work.';
+} else navigator.serial.addEventListener('disconnect',event=>{
+  if (serialSession && (event.target===serialSession.port || event.port===serialSession.port)) void disconnectArduino();
+});
+
+// 4. COLLISION: Rectangles, circles, and curved walls all reflect the ball.
+function isInWater(x,y) {
+  return (course.water||[]).some(pond=>pond.type==='circle'?Math.hypot(x-pond.x,y-pond.y)<pond.r:
+    x>pond.x&&x<pond.x+pond.w&&y>pond.y&&y<pond.y+pond.h);
+}
+// Closest point on a circular arc, including its two rounded end caps.
+function closestArcPoint(x,y,o) {
+  let angle=Math.atan2(y-o.y,x-o.x);
+  while(angle<o.a)angle+=Math.PI*2;
+  while(angle>=o.a+Math.PI*2)angle-=Math.PI*2;
+  if(angle>o.b){
+    const da=Math.hypot(x-o.x-Math.cos(o.a)*o.r,y-o.y-Math.sin(o.a)*o.r);
+    const db=Math.hypot(x-o.x-Math.cos(o.b)*o.r,y-o.y-Math.sin(o.b)*o.r);
+    angle=da<db?o.a:o.b;
+  }
+  return {x:o.x+Math.cos(angle)*o.r,y:o.y+Math.sin(angle)*o.r};
+}
+function bounceRound(b,x,y,r) {
+  const dx=b.x-x,dy=b.y-y,d=Math.hypot(dx,dy),contact=b.r+r;
+  if(d>=contact)return;
+  const nx=d>0?dx/d:1,ny=d>0?dy/d:0;
+  b.x+=nx*(contact-d);b.y+=ny*(contact-d);
+  const toward=b.vx*nx+b.vy*ny;
+  if(toward<0){b.vx-=(1+BOUNCE)*toward*nx;b.vy-=(1+BOUNCE)*toward*ny;}
+}
+function bounceOffWalls(b) {
+  const left=WALL+b.r, right=course.w-WALL-b.r, top=WALL+b.r, bottom=course.h-WALL-b.r;
+  if(b.x<left){b.x=left;b.vx=Math.abs(b.vx)*BOUNCE;}
+  if(b.x>right){b.x=right;b.vx=-Math.abs(b.vx)*BOUNCE;}
+  if(b.y<top){b.y=top;b.vy=Math.abs(b.vy)*BOUNCE;}
+  if(b.y>bottom){b.y=bottom;b.vy=-Math.abs(b.vy)*BOUNCE;}
+}
+function bounceOffObstacle(b,o) {
+  if(o.type==='circle'){bounceRound(b,o.x,o.y,o.r);return;}
+  if(o.type==='arc'){const point=closestArcPoint(b.x,b.y,o);bounceRound(b,point.x,point.y,o.thickness/2);return;}
+  const nxPoint=Math.max(o.x,Math.min(b.x,o.x+o.w));
+  const nyPoint=Math.max(o.y,Math.min(b.y,o.y+o.h));
+  const dx=b.x-nxPoint,dy=b.y-nyPoint,d=Math.hypot(dx,dy);
+  if(d>=b.r)return;
+  let nx,ny,penetration;
+  if(d>0){nx=dx/d;ny=dy/d;penetration=b.r-d;}
+  else {
+    // Defensive recovery if a future course edit places a ball inside a wall.
+    const faces=[{d:b.x-o.x,nx:-1,ny:0},{d:o.x+o.w-b.x,nx:1,ny:0},{d:b.y-o.y, nx:0,ny:-1},{d:o.y+o.h-b.y,nx:0,ny:1}];
+    faces.sort((a,c)=>a.d-c.d);nx=faces[0].nx;ny=faces[0].ny;penetration=b.r+faces[0].d;
+  }
+  b.x+=nx*penetration;b.y+=ny*penetration;
+  const towardWall=b.vx*nx+b.vy*ny;
+  if(towardWall<0){b.vx-=(1+BOUNCE)*towardWall*nx;b.vy-=(1+BOUNCE)*towardWall*ny;}
+}
+
+// 5. BALL COLLISIONS: Separate overlapping balls and apply a damped impulse.
+function collideBalls() {
+  const live = players.filter(p=>!p.done[holeIndex]&&p.ball.fallTime===0);
+  for(let i=0;i<live.length;i++){
+    for(let j=i+1;j<live.length;j++)collidePair(live[i].ball,live[j].ball);
+  }
+}
+function collidePair(a,b) {
+  const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),contact=a.r+b.r;
+  if(d>=contact)return;
+  const nx=d>0?dx/d:1,ny=d>0?dy/d:0;
+  const overlap=(contact-d+0.02)/2;
+  a.x-=nx*overlap;a.y-=ny*overlap;b.x+=nx*overlap;b.y+=ny*overlap;
+  const relative=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
+  if(relative>=0)return; // already moving apart: do not add another push
+  const impulse=-(1+BALL_RESTITUTION)*relative/2;
+  a.vx-=impulse*nx;a.vy-=impulse*ny;
+  b.vx+=impulse*nx;b.vy+=impulse*ny;
+  for(const ball of [a,b]){
+    ball.vx*=IMPACT_DAMPING;ball.vy*=IMPACT_DAMPING;
+    const speed=Math.hypot(ball.vx,ball.vy);
+    if(speed>MAX_BUMP_SPEED){ball.vx*=MAX_BUMP_SPEED/speed;ball.vy*=MAX_BUMP_SPEED/speed;}
+  }
+}
+
+// 6. TURN MANAGEMENT: Wait for EVERY ball, including a bumped opponent.
+function endShot() {
+  shotInProgress=false;
+  resetControllerTurn();
+  if(players.every(player=>player.done[holeIndex])) {
+    holeComplete=true;
+    roundComplete=holeIndex===COURSES.length-1;
+    if(roundComplete) {
+      if(players.length===1)statusText.textContent='Round complete! '+total(players[0])+' strokes across '+COURSES.length+' holes.';
+      else {
+        const best=Math.min(...players.map(total));
+        const winners=players.filter(p=>total(p)===best).map(p=>p.name);
+        statusText.textContent=winners.length===1?winners[0]+' wins with '+best+' strokes!':
+          'Tie: '+winners.join(' and ')+' finish with '+best+' strokes each!';
+      }
+    } else statusText.textContent='Everyone is in! The next hole starts after the score animations.';
+  } else {
+    for(let step=1;step<=players.length;step++) {
+      const candidate=(activePlayer+step)%players.length;
+      if(!players[candidate].done[holeIndex]){activePlayer=candidate;break;}
+    }
+    updateAim();announceTurn(shotNotes.join(' ')+(shotNotes.length?' ':''));
+  }
+  finishCelebrationTransition();
+}
+function update(dt) {
+  if(!shotInProgress)return;
+  // Every unfinished ball gets physics updates. Penalties belong to its owner.
+  players.forEach((p,index)=>{
+    if(p.done[holeIndex])return;
+    const b=p.ball;
+    if(b.fallTime>0){
+      b.fallTime=Math.max(0,b.fallTime-dt);
+      if(b.fallTime===0){
+        p.scores[holeIndex]++;
+        resetToTee(index);
+        shotNotes.push(p.name+': water, +1 penalty, back at the tee.');
+        refreshUI();
+      }
+      return;
+    }
+    b.x+=b.vx*dt;b.y+=b.vy*dt;
+    bounceOffWalls(b);
+    for(const o of course.obstacles)bounceOffObstacle(b,o);
+  });
+  collideBalls();
+  for(const p of players){
+    const b=p.ball;
+    if(p.done[holeIndex]||b.fallTime>0)continue;
+    // Resolve any wall overlap caused by separating the two balls.
+    bounceOffWalls(b);
+    for(const o of course.obstacles)bounceOffObstacle(b,o);
+    if(isInWater(b.x,b.y)){
+      b.fallTime=0.65;b.vx=b.vy=0;
+      statusText.textContent=p.name+' splashed into the water! Returning to the tee…';
+      continue;
+    }
+    if(Math.hypot(b.x-course.cup.x,b.y-course.cup.y)<=(course.cup.r||CUP_RADIUS)){
+      b.x=course.cup.x;b.y=course.cup.y;b.vx=b.vy=0;
+      p.done[holeIndex]=true;
+      celebrateScore(p);
+      shotNotes.push(p.name+' holed it!');refreshUI();continue;
+    }
+    const speed=Math.hypot(b.vx,b.vy),nextSpeed=Math.max(0,speed-FRICTION*dt);
+    const scale=speed>0&&nextSpeed>4?nextSpeed/speed:0;
+    b.vx*=scale;b.vy*=scale;
+  }
+  const stillMoving=players.some(p=>!p.done[holeIndex]&&(p.ball.fallTime>0||Math.hypot(p.ball.vx,p.ball.vy)>0));
+  if(!stillMoving)endShot();
+}
+
+// 7. RENDERING: Use the current course dimensions rather than hardcoded bounds.
+function circle(x,y,r,color){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();}
+function drawBall(p,i) {
+  if(p.done[holeIndex])return;
+  const b=p.ball;
+  ctx.globalAlpha=1;
+  const radius=b.fallTime>0?Math.max(0.5,b.r*b.fallTime/0.65):b.r;
+  if(b.fallTime>0)ctx.globalAlpha*=b.fallTime/0.65;
+  circle(b.x+3,b.y+4,radius,'#15352c60');circle(b.x,b.y,radius,COLORS[i]);
+  ctx.fillStyle='#234635';ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.fillText(String(i+1),b.x,b.y+4);
+  ctx.globalAlpha=1;ctx.textAlign='left';
+}
+function pondPath(pond) {
+  ctx.beginPath();
+  if(pond.type==='circle')ctx.arc(pond.x,pond.y,pond.r,0,Math.PI*2);
+  else ctx.rect(pond.x,pond.y,pond.w,pond.h);
+}
+function drawPond(pond) {
+  pondPath(pond);ctx.fillStyle='#397f9e';ctx.fill();
+  ctx.strokeStyle='#a0c7be';ctx.lineWidth=5;ctx.stroke();
+  ctx.save();pondPath(pond);ctx.clip();
+  const x=pond.type==='circle'?pond.x-pond.r:pond.x;
+  const y=pond.type==='circle'?pond.y-pond.r:pond.y;
+  const w=pond.type==='circle'?pond.r*2:pond.w,h=pond.type==='circle'?pond.r*2:pond.h;
+  ctx.strokeStyle='#8ec4d080';ctx.lineWidth=2;
+  for(let yy=y+20;yy<y+h;yy+=24){
+    for(let xx=x+10;xx<x+w;xx+=60){
+      ctx.beginPath();ctx.moveTo(xx,yy);ctx.quadraticCurveTo(xx+10,yy-5,xx+20,yy);ctx.quadraticCurveTo(xx+30,yy+5,xx+40,yy);ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+function draw() {
+  const w=course.w,h=course.h;
+  ctx.fillStyle='#bead86';ctx.fillRect(0,0,w,h);
+  ctx.fillStyle='#3d8059';ctx.fillRect(WALL,WALL,w-2*WALL,h-2*WALL);
+  ctx.save();ctx.beginPath();ctx.rect(WALL,WALL,w-2*WALL,h-2*WALL);ctx.clip();
+  ctx.fillStyle='#ffffff05';
+  for(let x=WALL;x<w-WALL;x+=120)ctx.fillRect(x,WALL,Math.min(60,w-WALL-x),h-2*WALL);
+  ctx.restore();
+  ctx.font='bold 13px system-ui';ctx.fillStyle='#d8ead399';ctx.fillText('TEE',course.start.x-13,course.start.y+38);
+  for(const pond of course.water||[])drawPond(pond);
+  for(const o of course.obstacles){
+    if(o.type==='circle'){
+      circle(o.x+5,o.y+6,o.r,'#123a2f55');circle(o.x,o.y,o.r,'#d1b987');
+      circle(o.x,o.y,o.r-7,'#b99d70');circle(o.x-7,o.y-8,o.r*0.25,'#cbb17f');
+    } else if(o.type==='arc'){
+      ctx.lineCap='round';ctx.lineWidth=o.thickness+2;ctx.strokeStyle='#16352744';
+      ctx.beginPath();ctx.arc(o.x+5,o.y+6,o.r,o.a,o.b);ctx.stroke();
+      ctx.lineWidth=o.thickness;ctx.strokeStyle='#d1b987';
+      ctx.beginPath();ctx.arc(o.x,o.y,o.r,o.a,o.b);ctx.stroke();
+      ctx.lineWidth=3;ctx.strokeStyle='#b99d70';
+      ctx.beginPath();ctx.arc(o.x,o.y,o.r,o.a,o.b);ctx.stroke();ctx.lineCap='butt';
+    } else {
+      ctx.fillStyle='#d1b987';ctx.fillRect(o.x,o.y,o.w,o.h);
+    }
+  }
+  const cup=course.cup;
+  const cupRadius=cup.r||CUP_RADIUS;
+  circle(cup.x,cup.y,cupRadius+3,'#9fbf7e');circle(cup.x,cup.y,cupRadius,'#142f24');
+  ctx.strokeStyle='#f8ecd0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cup.x,cup.y-2);ctx.lineTo(cup.x,cup.y-65);ctx.stroke();
+  ctx.fillStyle='#f3bd66';ctx.beginPath();ctx.moveTo(cup.x+1,cup.y-65);ctx.lineTo(cup.x+33,cup.y-54);ctx.lineTo(cup.x+1,cup.y-43);ctx.fill();
+  if(!shotInProgress&&!holeComplete) {
+    const b=currentPlayer().ball;
+    // This line indicates direction, not a predicted bouncing trajectory.
+    const length=95+Number(powerInput.value)*1.6;
+    ctx.strokeStyle=COLORS[activePlayer];ctx.lineWidth=2;ctx.setLineDash([6,8]);ctx.beginPath();ctx.moveTo(b.x,b.y);
+    ctx.lineTo(b.x+Math.cos(aimAngle)*length,b.y+Math.sin(aimAngle)*length);ctx.stroke();ctx.setLineDash([]);
+    circle(b.x,b.y,b.r+7,'#ffffff25');
+  }
+  // Draw the active ball last; all unfinished balls can collide.
+  players.forEach((p,i)=>{if(i!==activePlayer)drawBall(p,i);});
+  drawBall(currentPlayer(),activePlayer);
+  if(roundComplete && !celebrationActive && celebrationQueue.length===0) {
+    ctx.fillStyle='#123c2bee';ctx.fillRect(w/2-220,h/2-50,440,100);
+    ctx.textAlign='center';ctx.fillStyle='#f8ecd0';ctx.font='30px Georgia';
+    ctx.fillText('Round complete',w/2,h/2-6);
+    ctx.font='15px system-ui';ctx.fillText('Final scores below · Select Play again',w/2,h/2+26);ctx.textAlign='left';
+  }
+}
+
+// 8. GAME LOOP: Fixed physics steps; mouse aim updates directly, with no easing.
+function loop(timestamp) {
+  if(previousTime===null)previousTime=timestamp;
+  const frameTime=Math.min((timestamp-previousTime)/1000,0.1);
+  accumulator+=frameTime;previousTime=timestamp;
+  while(accumulator>=STEP){accumulator-=STEP;update(STEP);}
+  updateAim();applyController(frameTime);updateControllerStatus();draw();requestAnimationFrame(loop);
+}
+document.addEventListener('visibilitychange',()=>{previousTime=null;accumulator=0;resetControllerTurn();});
+startRound();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
