@@ -39,7 +39,3 @@ My next goal is to test the distance sensor with an object at several known dist
 We also need to test the motor separately and check that it moves in repeatable increments. After that, we can combine movement and measurement, checking whether a pause after each movement improves the readings. Changing one setting at a time will make it easier to identify what affects the results.
 
 For the software, our first target is to display one sweep of measured points. Once that works, we can work toward collecting and displaying multiple layers. This gives us a smaller, testable goal before attempting a complete 3D object.
-
-### Reflection
-
-Restoring this project gives us a starting point, but we still need evidence that the parts work together reliably. The previous journal is useful because it records problems we can investigate instead of guessing where to start. Our progress should be documented through measurements, changes, and retests, even if the first scans are incomplete.
