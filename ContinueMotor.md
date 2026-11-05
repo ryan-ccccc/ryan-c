@@ -190,3 +190,23 @@ Next class, our main goal is to connect the scanner to the new software and atte
 Before attempting a complicated object, we plan to test a flat surface at a known distance. This will give us something clear to compare with the displayed points. We will also compare the sensor's distance readings with a ruler.
 
 If the result looks wrong, we will check the distance readings and motor movement separately, then change one setting at a time and repeat the test. I want to record the first result even if it is incomplete, because it will help us explain what failed and whether later changes actually improved it.
+
+## Day 3: Getting the Scanner Moving Again
+
+On Day 2, we saw the distance reading change when Kaydon moved his hand in front of the sensor. Today, Kaydon, Leo, and I tested whether the motors could move the scanner. We used Arduino test code that Kaydon generated with Claude.
+
+At first, only one motor responded. Since we were picking up a build from last year, we needed to check which parts still worked. We also ran into trouble with the power supply. One thing I learned is that the Arduino can send sensor readings over USB even when the motors aren't getting the power they need. That gave us a reason to check the motor supply, although we couldn't say for sure that it caused the unresponsive motor.
+
+By the end of class, we had both motors responding and the scanner moving again.
+
+<video controls playsinline preload="metadata" style="display: block; width: 100%; max-width: 600px; margin: 0 auto;">
+  <source src="videos/scanner-movement-day3.mp4" type="video/mp4">
+</video>
+
+*The restored scanner moving during our Arduino motor test.*
+
+### What comes next
+
+We now have evidence that the sensor can detect a change in distance and that the motors can move the scanner. We still need to find out whether the software can match each reading to the direction the sensor was facing and plot it in the right place.
+
+One option for next class is to scan a flat wall and see whether the points on screen form a flat surface. The other is to improve the original design, starting with a base that can hold the scanner steady on its own. I'd decide based on whether the scanner stays still between motor movements. If the base shifts during a sweep, it will be hard to tell whether a distorted scan came from the software or from the scanner itself moving.
