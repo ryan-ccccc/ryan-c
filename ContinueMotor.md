@@ -205,8 +205,29 @@ By the end of class, we had both motors responding and the scanner moving again.
 
 *The restored scanner moving during our Arduino motor test.*
 
+### How Our Motor Test Worked
+
+Kaydon used Claude to generate the Arduino sketch we ran. The goal was to see whether both motors could move and reverse. This sketch runs on the Arduino by itself. It doesn't read the distance sensor or need the scanning software, so we could test the movement separately.
+
+In `setup()`, the Arduino sets the motor control pins to `OUTPUT` and writes `LOW` to `ENABLE_PIN` (pin 8). That line stood out to me because `LOW` actually enables the drivers on our CNC shield. It gives them permission to move the motors, but they still need power from the motor supply.
+
+The part that explains the movement in our video is the loop:
+
+```cpp
+void loop() {
+  moveBoth(HIGH);
+  moveBoth(LOW);
+}
+```
+
+Here, `HIGH` and `LOW` are direction settings. Inside `moveBoth()`, the code sets the direction for both motors, then pulses both `STEP` pins 100 times. Each pulse tells each driver to move its motor one step. The 10,000-microsecond delay spaces the pulses about 10 milliseconds apart, so each movement takes roughly one second. The scanner pauses for half a second, reverses for 100 steps, and pauses again. That pattern repeats while the sketch is running.
+
+One detail I learned is that 100 full steps is half a turn of our motor shaft, but it doesn't mean the sensor itself tilts 180 degrees. The screw linkage turns the motor's rotation into a smaller tilt movement and has limited travel. The sketch always sends the number of steps set in `STEPS`; it has no way to detect when the linkage reaches its limit.
+
+This also helped me understand our troubleshooting. The sketch sends step commands to both drivers during the same loop. When only one motor moved, we knew the loop was running, but we couldn't tell from the code alone why the other motor stayed still. Seeing both motors move and reverse gave us evidence that both responded to the test. Checking whether the software can use those movements to build a scan is still a separate task.
+
 ### What comes next
 
 We now have evidence that the sensor can detect a change in distance and that the motors can move the scanner. We still need to find out whether the software can match each reading to the direction the sensor was facing and plot it in the right place.
 
-One option for next class is to scan a flat wall and see whether the points on screen form a flat surface. The other is to improve the original design, starting with a base that can hold the scanner steady on its own. I'd decide based on whether the scanner stays still between motor movements. If the base shifts during a sweep, it will be hard to tell whether a distorted scan came from the software or from the scanner itself moving.
+One option for next class is to scan something and see if the software works or not. The other is to improve the original design, starting with a base that can hold the scanner steady on its own. We will decide what direction to move towards next class.
