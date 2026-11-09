@@ -264,6 +264,68 @@ The `printDistance()` function takes five analog readings and averages them. It 
 
 I also understood how to adjust the scanning range. Assuming a 200-step motor with 1/16 microstepping, one full rotation takes 3,200 microsteps. A 45° rotation is one eighth of a turn, so we set the X travel to 400 microsteps.
 
+### Code That Controls the Scan
+
+This is the section of our working code that controls the scanning sequence. The earlier code only tested whether the motors worked. This code moves X across each row and calls `recordPoint()` to take distance readings. After each row, it moves Y upward and reverses X for the next row. It uses the movement and sensor-reading functions defined elsewhere in the full program.
+
+These settings give us a 45° X sweep and 10 microsteps of upward Y movement between rows:
+
+```cpp
+const long X_SWEEP_STEPS = 400;
+const int X_SAMPLE_STEPS = 16;
+const int Y_TRAVEL_STEPS = 450;
+const int Y_ROW_STEPS = 10;
+const int ROW_COUNT = Y_TRAVEL_STEPS / Y_ROW_STEPS + 1;
+```
+
+The function below uses those settings to complete the scan:
+
+```cpp
+void runScan() {
+  Serial.println("Scan started.");
+
+  for (int row = 0; row < ROW_COUNT; row++) {
+    // Alternate X direction for each row.
+    int direction = (row % 2 == 0) ? 1 : -1;
+
+    // Take a reading at the beginning of the row.
+    if (!recordPoint(row)) return;
+
+    long remaining = X_SWEEP_STEPS;
+
+    while (remaining > 0) {
+      long amount = X_SAMPLE_STEPS;
+      if (amount > remaining) amount = remaining;
+
+      // Move X to the next measurement position.
+      if (!moveAxis(
+            X_STEP_PIN, X_DIR_PIN, X_FORWARD,
+            direction, amount, xPosition)) {
+        return;
+      }
+
+      remaining -= amount;
+
+      // Read the sensor and print the measurement.
+      if (!recordPoint(row)) return;
+    }
+
+    // Raise Y if another row remains.
+    if (row < ROW_COUNT - 1) {
+      if (!moveAxis(
+            Y_STEP_PIN, Y_DIR_PIN, Y_UP,
+            1, Y_ROW_STEPS, yPosition)) {
+        return;
+      }
+    }
+  }
+
+  Serial.println("Scan complete: 46 rows.");
+}
+```
+
+I understood that the outer `for` loop controls the rows, while the inner `while` loop controls movement across each row. `remaining` tracks how many X microsteps are left before reaching the end. The direction switches between `1` and `-1` on alternating rows. The final condition prevents Y from moving upward again after the last row.
+
 ### Using AI and testing the result
 
 We used ChatGPT to help turn the motor test into scanning code. We provided the pin connections, tested movement range, and the number of microsteps we wanted between rows. We tested the code on the hardware and corrected the sensor assumption when the distance readings did not work.
