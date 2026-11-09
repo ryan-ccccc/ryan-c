@@ -231,3 +231,45 @@ This also helped me understand our troubleshooting. The sketch sends step comman
 We now have evidence that the sensor can detect a change in distance and that the motors can move the scanner. We still need to find out whether the software can match each reading to the direction the sensor was facing and plot it in the right place.
 
 One option for next class is to scan something and see if the software works or not. The other is to improve the original design, starting with a base that can hold the scanner steady on its own. We will decide what direction to move towards next class.
+
+## Day 4: Getting the Scanner Working
+
+### From testing the motors to scanning
+
+Today, we got the scanner movement and distance readings working together. The previous code was only a test to check whether the motors and their connections worked. It moved the motors back and forth, but it did not scan an object.
+
+The new code actually performs a scan. X moves across a horizontal row while the sensor measures distance. After each row, Y moves upward by 10 microsteps, and X scans back in the opposite direction.
+
+### Adjusting the movement
+
+We tested the Y movement and chose the range from −90 to 360 microsteps because it worked best for our mechanism. This gives 450 microsteps of travel. With 10 microsteps between rows, the scanner takes 46 rows, including the starting row.
+
+We also changed the X sweep from 90° to 45°. This required changing the movement count from 800 to 400 microsteps and updating the angle calculation displayed in the Serial Monitor. The Y values are only motor positions. We have not measured the actual tilt angle produced by the screw linkage.
+
+### Fixing the sensor code
+
+At first, the Serial Monitor kept displaying “No echo detected.” The AI-generated code assumed we were using an ultrasonic sensor, but our actual sensor was the Sharp GP2Y0A21YK0F infrared sensor. It was connected to CoolEn, 5V, and GND.
+
+After we supplied the correct sensor model, the code was changed to read an analog voltage through A3 instead of waiting for an ultrasonic echo. This fixed the reading method, and we were able to get distance measurements in the Serial Monitor.
+
+### How I understood the code
+
+The pin settings at the beginning tell the Arduino where the motors and sensor are connected. Each motor has a direction pin and a step pin. The direction pin controls which way it turns, and pulses sent to the step pin control how far it moves. With our driver settings, each pulse represents one microstep.
+
+The `moveAxis()` function sends these pulses and counts the commanded movement. I understood that this count does not prove the motor reached that position. If the motor gets stuck, the code will still count the pulses because there is no position sensor checking it.
+
+The `runScan()` function controls the scanning sequence. X moves 16 microsteps between readings, pauses for a measurement, and continues until it finishes the row. Y then moves upward by 10 microsteps. X changes direction for the next row, creating a back-and-forth scanning pattern.
+
+The `printDistance()` function takes five analog readings and averages them. It converts the average into a voltage, then uses an approximate formula to calculate distance in centimetres. These measurements still need to be checked against a ruler.
+
+I also understood how to adjust the scanning range. Assuming a 200-step motor with 1/16 microstepping, one full rotation takes 3,200 microsteps. A 45° rotation is one eighth of a turn, so we set the X travel to 400 microsteps.
+
+### Using AI and testing the result
+
+We used ChatGPT to help turn the motor test into scanning code. We provided the pin connections, tested movement range, and the number of microsteps we wanted between rows. We tested the code on the hardware and corrected the sensor assumption when the distance readings did not work.
+
+The commands made testing easier: `t` checks the distance without moving, `s` starts the scan, and `q` stops it. We still need to position the scanner at its starting point before running it because it cannot automatically find that position.
+
+### Next class
+
+Next class, our goal is to test the software Kaydon created earlier. Now that the scanner movement and distance readings work, we need to check whether his software can receive and use the data from this code.
