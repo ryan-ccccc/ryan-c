@@ -406,12 +406,9 @@ Reviewing the code helped me understand how the software sends movement commands
 
 ### Video of the scanner working
 
-<video controls width="100%">
+<video controls playsinline preload="metadata" style="display: block; width: 100%; max-width: 600px; margin: 0 auto;">
   <source src="videos/software-working.mp4" type="video/mp4">
-  Your browser does not support embedded video.
 </video>
-
-[Open the video](videos/software-working.mp4)
 
 This video shows the scanner running after we got the connections and software working together.
 
