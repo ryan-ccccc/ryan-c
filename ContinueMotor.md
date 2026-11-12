@@ -326,6 +326,10 @@ void runScan() {
 
 I understood that the outer `for` loop controls the rows, while the inner `while` loop controls movement across each row. `remaining` tracks how many X microsteps are left before reaching the end. The direction switches between `1` and `-1` on alternating rows. The final condition prevents Y from moving upward again after the last row.
 
+<video controls playsinline preload="metadata" style="display: block; width: 100%; max-width: 600px; margin: 0 auto;">
+  <source src="videos/scanner-working.mp4" type="video/mp4">
+</video>
+
 ### Using AI and testing the result
 
 We used ChatGPT to help turn the motor test into scanning code. We provided the pin connections, tested movement range, and the number of microsteps we wanted between rows. We tested the code on the hardware and corrected the sensor assumption when the distance readings did not work.
