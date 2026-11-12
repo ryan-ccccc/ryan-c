@@ -339,3 +339,28 @@ The commands made testing easier: `t` checks the distance without moving, `s` st
 ### Next class
 
 Next class, our goal is to test the software Kaydon created earlier. Now that the scanner movement and distance readings work, we need to check whether his software can receive and use the data from this code.
+
+## Links & references
+
+**Datasheets and parts**
+
+- [Sharp GP2Y0A21YK0F datasheet](https://global.sharp/products/device/lineup/data/pdf/datasheet/gp2y0a21yk_e.pdf) and [Pololu's product page](https://www.pololu.com/product/136) for the IR sensor
+- [Allegro A4988 datasheet](https://www.allegromicro.com/-/media/files/datasheets/a4988-datasheet.pdf) and [Pololu's A4988 driver page](https://www.pololu.com/product/1182), including setting the current limit
+- [Protoneer Arduino CNC Shield](https://blog.protoneer.co.nz/arduino-cnc-shield/), the original shield our clone is based on
+- [GRBL's wiring guide](https://github.com/gnea/grbl/wiki/Connecting-Grbl), which shows the shield's pin layout, including CoolEn on A3
+- [Arduino Uno Rev3 documentation](https://docs.arduino.cc/hardware/uno-rev3/)
+- [NEMA 17 stepper motors on the RepRap wiki](https://reprap.org/wiki/NEMA_17_Stepper_motor)
+
+**Software**
+
+- [arduino-cli documentation](https://arduino.github.io/arduino-cli/latest/)
+- [Web Serial API on MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API)
+- [three.js documentation](https://threejs.org/docs/)
+- [Next.js documentation](https://nextjs.org/docs)
+
+**Our project**
+
+- [RLK repository](https://github.com/kfidak13/RLK), with all of the code
+- [The firmware](https://github.com/kfidak13/RLK/blob/main/firmware/scanner/scanner.ino) and [the web page](https://github.com/kfidak13/RLK/tree/main/web)
+- [The design document](https://github.com/kfidak13/RLK/blob/main/docs/superpowers/specs/2026-11-02-3d-scan-viewer-design.md)
+- [The hardware checklist](https://github.com/kfidak13/RLK/blob/main/docs/hardware-checklist.md)
