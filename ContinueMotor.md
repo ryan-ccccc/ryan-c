@@ -350,6 +350,8 @@ Kaydon asked AI to update the software. We used the updated version as part of g
 
 [Updated scanner software](https://github.com/kfidak13/RLK/tree/d3995a5b0314dc1fafc8d93dbfa8fc18f211895c)
 
+<img width="569" height="427" alt="1996a95a11bc18d7c6213698339b8e77" src="https://github.com/user-attachments/assets/a35eb3bd-8fe2-48c6-8c99-1ae932095b31" />
+
 ### How the software controls the scanner
 
 One important difference from our earlier code is that the browser now organizes the scan. The Arduino listens for commands to move the motors or read the sensor instead of running the whole scanning pattern by itself.
