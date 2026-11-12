@@ -340,6 +340,85 @@ The commands made testing easier: `t` checks the distance without moving, `s` st
 
 Next class, our goal is to test the software Kaydon created earlier. Now that the scanner movement and distance readings work, we need to check whether his software can receive and use the data from this code.
 
+## Day 5: Getting the Scanner Software Working
+
+### Connecting the scanner and software
+
+Today, we got the scanner software working with the hardware. The connections, motor movement, and distance readings now work together, and we were able to run a scan. Last class, we got the Arduino scanning code working. Today, we connected that progress to the software that controls and displays the scan.
+
+Kaydon asked AI to update the software. We used the updated version as part of getting the system working.
+
+[Updated scanner software](https://github.com/kfidak13/RLK/tree/d3995a5b0314dc1fafc8d93dbfa8fc18f211895c)
+
+### How the software controls the scanner
+
+One important difference from our earlier code is that the browser now organizes the scan. The Arduino listens for commands to move the motors or read the sensor instead of running the whole scanning pattern by itself.
+
+In `webSerial.ts`, the software connects to the Arduino through Web Serial at 115200 baud. In `scanner.ts`, it sends commands such as `M` for movement and `R` for a sensor reading. It waits for the Arduino to reply before continuing, keeping the movement and readings in order.
+
+This section shows the main sequence:
+
+```ts
+for (const pos of positions) {
+  if (opts.signal.aborted) break;
+  await moveTo(start.pan + pos.pan, start.tilt + pos.tilt);
+  const raw = await s.read();
+  opts.onSample({ panSteps: pos.pan, tiltSteps: pos.tilt, raw });
+}
+```
+
+I understood this as moving to one position, waiting for the movement to finish, reading the sensor, and saving that reading with its motor position. The `await` statements are important because the program should not take the reading before the movement finishes.
+
+### Creating the scanning pattern
+
+The `sweepPositions()` function in `sweep.ts` creates the positions for each row. It reverses the horizontal order on alternating rows:
+
+```ts
+return tilts.flatMap((tilt, row) =>
+  (row % 2 === 0 ? pans : pans.toReversed()).map((pan) => ({ pan, tilt })),
+);
+```
+
+This produces the back-and-forth pattern we wanted. The scanner finishes one row, changes its tilt, and scans across in the opposite direction. The software also checks the requested scan against the configured tilt limits before starting.
+
+### Reading the sensor and displaying the results
+
+The updated Arduino firmware takes ten readings from the infrared sensor and sorts them. It sends back the upper middle reading instead of averaging them. This reduces the effect of an unusually high or low reading.
+
+In `convert.ts`, the software converts the raw sensor value into voltage and then estimates the distance:
+
+```ts
+const volts = (raw * 5) / 1023;
+const cm = cal.curveA * Math.pow(volts, cal.curveB);
+```
+
+The calibration values control the distance formula. The code filters out calculated distances outside the 10–80 cm range. It can then combine distance with the horizontal and vertical angles to calculate a point's position in 3D space.
+
+`PointCloud.tsx` uses Three.js to display these points and colour them according to distance. I understood that collecting readings and displaying an accurate shape are separate steps. The movement-to-angle settings must match our hardware, especially because the screw linkage affects the sensor's tilt.
+
+### AI Use and Testing
+
+Kaydon asked AI to update the scanner software. We connected the hardware and tested the updated software with the scanner. The calibration is working, and we were able to get the motor movement and distance readings working together.
+
+Reviewing the code helped me understand how the software sends movement commands, waits for the Arduino to respond, and saves each sensor reading with its motor position.
+
+### Video of the scanner working
+
+<video controls width="100%">
+  <source src="videos/software-working.mp4" type="video/mp4">
+  Your browser does not support embedded video.
+</video>
+
+[Open the video](videos/software-working.mp4)
+
+This video shows the scanner running after we got the connections and software working together.
+
+### Current Problem and Next Steps
+
+The software currently runs on Kaydon’s laptop, but we have not yet got it running on everyone else’s laptops. This means we still depend on his laptop to use the scanner.
+
+Next class, our goal is to get the software running locally on each person's laptop. We need to check which programs and dependencies are required, test the setup on another laptop, and write down the steps so everyone can launch the software and connect to the scanner.
+
 ## Links & references
 
 **Datasheets and parts**
