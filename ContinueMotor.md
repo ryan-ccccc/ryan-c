@@ -418,6 +418,107 @@ The software currently runs on Kaydon’s laptop, but we have not yet got it run
 
 Next class, our goal is to get the software running locally on each person's laptop. We need to check which programs and dependencies are required, test the setup on another laptop, and write down the steps so everyone can launch the software and connect to the scanner.
 
+## Day 6: Testing the Published Website and Improving the Scan
+
+### Getting the Website Working for Everyone
+
+Between Day 5 and Day 6, Kaydon published the scanner website. This solved our previous problem of depending on his laptop to run the software. Everyone in the group could now open the website on their own laptop.
+
+The repository now includes a GitHub Actions workflow that builds and publishes the website through GitHub Pages when changes are pushed to the main branch.
+
+[Scanner website](https://kfidak13.github.io/RLK/)
+
+[Code version reviewed for Day 6](https://github.com/kfidak13/RLK/tree/738457a70024b9d04109b4c2c46f9baf71bcd078)
+
+<img width="1719" height="951" alt="Screenshot 2026-11-17 at 8 53 37 AM" src="https://github.com/user-attachments/assets/a3bd94d9-5711-4a9b-a908-64d17055d426" />
+
+*The website at the beginning of class, before our updates.*
+
+<img width="1280" height="1707" alt="703d4842ab2976134b25f0915ebeff06" src="https://github.com/user-attachments/assets/4fd339dd-3e82-4838-ba4d-7da58e70848e" />
+
+*Our first test after getting the website working for all group members.*
+
+### Scanning Leo’s Water Bottle
+
+We tried scanning Leo’s water bottle. The scanner collected readings and produced a result, but it did not show the bottle’s shape accurately. We could mainly tell that something was in front of the background. Detecting an object was working, but the result was not yet a clear 3D representation of the bottle.
+
+We asked Claude to help improve the software and Arduino code. We wanted to collect more measurement points and make the object easier to distinguish from the background. We also wanted a setting that could hide readings beyond a chosen distance.
+
+### Collecting More Points
+
+One important setting is the number of Y microsteps between rows. Reducing this number puts the rows closer together and collects more measurements over the same vertical travel.
+
+The Arduino now calculates the number of rows from the selected setting:
+
+```cpp
+int rowCount() {
+  return Y_TRAVEL_STEPS / yRowSteps + 1;
+}
+```
+
+For example, with 450 microsteps of vertical travel, 10 microsteps per row gives 46 rows. Changing this to 5 gives 91 rows. This provides more samples, although it also takes longer and does not automatically make each distance reading more accurate.
+
+The X sweep setting changes how wide each row is. The horizontal spacing between readings is still set to 16 microsteps in the Arduino code, so increasing the sweep covers a wider area rather than making the horizontal measurements closer together.
+
+### Hiding the Background
+
+The updated website includes a “Hide points farther than” setting. This lets us choose a maximum distance for the displayed points.
+
+The main filtering line is:
+
+```ts
+points.filter((p) => p.cm <= maxCm)
+```
+
+I understood this as checking each point’s distance and only displaying it if it is within the limit we entered. This should help isolate the water bottle from a background farther away.
+
+The filter hides points in the display rather than stopping the sensor from measuring them. The original readings are still available in the CSV export, so we can change the filter without losing the collected data.
+
+### Fixing the Website Settings
+
+After the update, we found another problem. Changing settings such as “X sweep per row” and “Y per row” on the website did not actually change how the Arduino scanned. The website values had changed, but the Arduino was still using its previous settings.
+
+We updated the connection between the website controls and the Arduino firmware. Before starting a scan, the website now sends:
+
+```ts
+await send(`x ${sweepMicrosteps(sweepDeg)}`);
+await send(`y ${yRow}`);
+await send("s");
+```
+
+The first command converts the requested X angle into microsteps and sends it to the Arduino. The second sends the Y movement between rows. The final command starts the scan.
+
+On the Arduino, the sweep and row spacing are now adjustable variables:
+
+```cpp
+long xSweepSteps = 400;
+int yRowSteps = 10;
+```
+
+The firmware reads the new values from the serial commands and uses them in the scanning loop. This changes the settings used by the running program rather than rewriting the Arduino source code every time we adjust a control.
+
+The Arduino also prints its settings back to the website. The website compares these with the requested values and displays a message if they do not match. This helps us notice when an older Arduino sketch is ignoring the controls.
+
+### Updating the Arduino and Testing Again
+
+The website now has an “Update Arduino” button that uploads the scanner firmware through the browser. The publishing workflow includes a compiled copy of the sketch with the website, so the updated firmware is available alongside the interface.
+
+After updating, we tested the scanner again and confirmed that the settings and scanning were working. This fixed the problem of changing values on the website without changing the actual motor movement.
+
+<img width="1719" height="951" alt="Screenshot 2026-11-17 at 8 53 37 AM" src="https://github.com/user-attachments/assets/29f4ddc7-2a32-4aa0-bd9e-03990fed9513" />
+
+*The updated website at the end of class, with the scanning controls and distance filter.*
+
+<video controls playsinline preload="metadata" style="display: block; width: 100%; max-width: 600px; margin: 0 auto;">
+  <source src="videos/DAY6_test.mp4" type="video/mp4">
+</video>
+
+### AI Use and Next StepsD
+
+We used Claude to help update the software and code after observing problems in the water bottle scan. We supplied the problems we saw and the changes we wanted, then tested the updated system on the hardware. The settings problem showed that a working control on the webpage does not necessarily mean the Arduino is receiving and using that value.
+
+Next, we need to repeat the water bottle scan with closer rows and a suitable background-distance limit. We can then compare the results with our first attempt and see whether the bottle’s shape is easier to recognize.
+
 ## Links & references
 
 **Datasheets and parts**
