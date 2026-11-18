@@ -505,7 +505,7 @@ The website now has an “Update Arduino” button that uploads the scanner firm
 
 After updating, we tested the scanner again and confirmed that the settings and scanning were working. This fixed the problem of changing values on the website without changing the actual motor movement.
 
-<img width="573" height="317" alt="Screenshot 2026-11-17 at 8 53 37 AM" src="https://github.com/user-attachments/assets/29f4ddc7-2a32-4aa0-bd9e-03990fed9513" />
+<img width="576" height="320" alt="Screenshot 2026-11-17 at 9 47 57 AM" src="https://github.com/user-attachments/assets/b0913331-f0cc-4e42-85e1-6d0beb43346c" />
 
 *The updated website at the end of class, with the scanning controls and distance filter.*
 
