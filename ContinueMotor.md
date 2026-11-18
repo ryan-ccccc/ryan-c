@@ -513,7 +513,7 @@ After updating, we tested the scanner again and confirmed that the settings and 
   <source src="videos/DAY6_test.mp4" type="video/mp4">
 </video>
 
-### AI Use and Next StepsD
+### AI Use and Next Steps
 
 We used Claude to help update the software and code after observing problems in the water bottle scan. We supplied the problems we saw and the changes we wanted, then tested the updated system on the hardware. The settings problem showed that a working control on the webpage does not necessarily mean the Arduino is receiving and using that value.
 
