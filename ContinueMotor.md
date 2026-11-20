@@ -519,6 +519,35 @@ We used Claude to help update the software and code after observing problems in 
 
 Next, we need to repeat the water bottle scan with closer rows and a suitable background-distance limit. We can then compare the results with our first attempt and see whether the bottle’s shape is easier to recognize.
 
+## Day 7: Scanning a Skull and Testing Calibration
+
+### Testing the Scanner
+
+Today, we spent the class trying to scan a skull. After getting the website controls and Arduino working together, we wanted to see whether the scanner could capture a more detailed object.
+
+The scanner ran, but we were not able to get an accurate result. We tried adjusting the calibration through the software, but the scan still did not represent the skull’s shape clearly.
+
+<img width="320" height="427" alt="8c68323c1d8c37d9804f4413d70565c6" src="https://github.com/user-attachments/assets/e94b3ba4-8094-437c-b25a-1f2a2eeb476c" />
+
+*The scanner collecting readings from the skull during our test.*
+
+### Working on Calibration
+
+We focused on the software calibration because the displayed shape depends on how the program combines distance readings with the sensor’s angle. If the angle values do not match the actual movement, the software can place points incorrectly even when the distance readings are reasonable.
+
+We tried to improve the result through the software, but we did not identify the cause by the end of class. The test showed that getting the motors and website to communicate was only one part of the process. We still need to check whether the measurements and calculated positions match the physical object.
+
+### Couldn't Complete Much Progress This Class
+
+We couldn't make much progress this class because we spent most of it testing the software, and scanning an object takes a while. Additionally, our testing time was cut short because each group had to present their scanners to the class, which took up a lot of time.
+
+### Next Class: Finding the Problem
+
+Next class, we need to troubleshoot the inaccurate scan rather than keep changing settings without knowing which part is wrong. The software is one possible cause, but we also need to check the sensor readings and mechanical movement.
+
+We will start with a flat surface at a measured distance and compare the scanner’s readings with a ruler. Then we will check whether the actual horizontal movement and vertical tilt match the angles used by the software. This is especially important for Y because the screw linkage may not produce equal angle changes for equal numbers of microsteps.
+
+If the distance and movement checks work, we can focus on the code that converts those measurements into 3D points. We should change one setting at a time and save the results so we can tell whether each adjustment improves the scan. Once a simple surface scans correctly, we can try the skull again.
 ## Links & references
 
 **Datasheets and parts**
